@@ -1,3 +1,10 @@
-from layers.conv_layer import create_conv_layer, create_conv_weight, create_conv_bias
-from layers.input_layer import create_input_layer
-from layers.output_layer import create_output_layer
+from layers.conv_layer import ConvLayer
+from layers.input_layer import InputLayer
+from layers.output_layer import OutputLayer
+from layers.batchnorm_layer import BatchNormLayer
+from layers.relu_layer import ReluLayer
+from layers.pooling_layer import PoolingLayer
+from layers.eltwise_layer import EltwiseLayer
+from layers.reshape_layer import Reshapelayer
+from layers.gemm_layer import GemmLayer
+from layers.softmax_layer import SoftmaxLayer

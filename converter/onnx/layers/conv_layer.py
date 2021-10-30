@@ -1,65 +1,98 @@
 import logging
+import numpy as np
 from onnx import helper
 from onnx import TensorProto as tp
 
-def get_conv_attr(layer):
-    attr_dict = {
-        "dilations": [1, 1], # list of ints defaults is 1
-        "group": 1, # int default is 1
-        "kernel_shape": 1, # list of ints If not present, should be inferred from input W.
-        "pads": [0, 0, 0, 0], # list of ints defaults to 0
-        "strides": [1, 1] # list of ints  defaults is 1
-    }
+from layers.base_layer import BaseLayer
 
-    if layer.convolution_param.dilation != []:
-        dilation = layer.convolution_param.dilation[0]
-        dilations = [dilation, dilation]
-        attr_dict["dilations"] = dilations
-        
-    if layer.convolution_param.pad != []:
-        pads = list(layer.convolution_param.pad) * 4
-        attr_dict["pads"] = pads
-    elif layer.convolution_param.pad_h != 0 or layer.convolution_param.pad_w != 0:
-        pads = [layer.convolution_param.pad_h, layer.convolution_param.pad_w] * 2
-        attr_dict["pads"] = pads
-    
-    if layer.convolution_param.stride != []:
-        strides = list(layer.convolution_param.stride) * 2
-        attr_dict["strides"] = strides
 
-    kernel_shape = list(layer.convolution_param.kernel_size) * 2
-    if layer.convolution_param.kernel_size == []:
-        kernel_shape = [layer.convolution_param.kernel_h, layer.convolution_param.kernel_w]
-    
-    attr_dict["kernel_shape"] = kernel_shape
-    attr_dict["group"] = layer.convolution_param.group
+class ConvLayer(BaseLayer):
+    def __init__(self, layer):
+        super(ConvLayer, self).__init__(layer)
 
-    return attr_dict
+    def get_conv_attr(self):
+        attr_dict = {
+            "dilations": [1, 1],  # list of ints defaults is 1
+            "group": 1,  # int default is 1
+            "kernel_shape": 1,  # list of ints If not present, should be inferred from input W.
+            "pads": [0, 0, 0, 0],  # list of ints defaults to 0
+            "strides": [1, 1],  # list of ints  defaults is 1
+        }
 
-def create_conv_weight(layer, params):
-    param_name = layer.name + "_weight"
+        if self._layer.convolution_param.dilation != []:
+            dilation = self._layer.convolution_param.dilation[0]
+            dilations = [dilation, dilation]
+            attr_dict["dilations"] = dilations
 
-    param_type = tp.FLOAT
-    param_shape = params.shape.dim
-    param_tensor_value_info = helper.make_tensor_value_info(param_name, param_type, param_shape)
-    param_tensor = helper.make_tensor(param_name, param_type, param_shape, params.data)
+        if self._layer.convolution_param.pad != []:
+            pads = list(self._layer.convolution_param.pad) * 4
+            attr_dict["pads"] = pads
+        elif (
+            self._layer.convolution_param.pad_h != 0
+            or self._layer.convolution_param.pad_w != 0
+        ):
+            pads = [
+                self._layer.convolution_param.pad_h,
+                self._layer.convolution_param.pad_w,
+            ] * 2
+            attr_dict["pads"] = pads
 
-    return param_name, param_tensor_value_info, param_tensor
+        if self._layer.convolution_param.stride != []:
+            strides = list(self._layer.convolution_param.stride) * 2
+            attr_dict["strides"] = strides
 
-def create_conv_bias(layer, params):
-    param_name = layer.name + "_bias"
+        kernel_shape = list(self._layer.convolution_param.kernel_size) * 2
+        if self._layer.convolution_param.kernel_size == []:
+            kernel_shape = [
+                self._layer.convolution_param.kernel_h,
+                self._layer.convolution_param.kernel_w,
+            ]
 
-    param_type = tp.FLOAT
-    param_shape = params.shape.dim
-    param_tensor_value_info = helper.make_tensor_value_info(param_name, param_type, param_shape)
-    param_tensor = helper.make_tensor(param_name, param_type, param_shape, params.data)
+        attr_dict["kernel_shape"] = kernel_shape
+        attr_dict["group"] = self._layer.convolution_param.group
 
-    return param_name, param_tensor_value_info, param_tensor
+        return attr_dict
 
-def create_conv_layer(layer, node_name, input_name, output_name):
-    attr_dict = get_conv_attr(layer)
-    logging.debug(attr_dict)
-    node = helper.make_node("Conv", input_name, output_name, node_name, **attr_dict)
-    logging.info("conv_layer: " +node_name + " created")
+    def create_conv_weight(self, params: np.ndarray):
+        param_name = self._layer.name + "_weight"
 
-    return node
+        param_type = tp.FLOAT
+        param_shape = params.shape
+        param_tensor_value_info = helper.make_tensor_value_info(
+            param_name, param_type, param_shape
+        )
+        param_tensor = helper.make_tensor(
+            param_name, param_type, param_shape, params.flatten()
+        )
+        self._in_names.append(param_name)
+        self._in_tensor_value_info.append(param_tensor_value_info)
+        self._init_tensor.append(param_tensor)
+
+    def create_conv_bias(self, params: np.ndarray):
+        param_name = self._layer.name + "_bias"
+
+        param_type = tp.FLOAT
+        param_shape = params.shape
+        param_tensor_value_info = helper.make_tensor_value_info(
+            param_name, param_type, param_shape
+        )
+        param_tensor = helper.make_tensor(
+            param_name, param_type, param_shape, params.flatten()
+        )
+        self._in_names.append(param_name)
+        self._in_tensor_value_info.append(param_tensor_value_info)
+        self._init_tensor.append(param_tensor)
+
+    def generate_node(self):
+        attr_dict = self.get_conv_attr()
+        logging.debug(attr_dict)
+        node = helper.make_node(
+            "Conv", self._in_names, self._out_names, self._layer.name, **attr_dict
+        )
+        logging.info("conv_layer: " + self._layer.name + " created")
+        self._node = node
+
+    def generate_params(self, params):
+        self.create_conv_weight(params[0])
+        if (len(params)) == 2:
+            self.create_conv_bias(params[1])
