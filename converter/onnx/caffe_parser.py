@@ -259,11 +259,16 @@ class caffe2onnx_converter:
             onnx_rt_dict[input_name] = input_data
 
         pred = self.caffe_net.forward()
-        caffe_outname = self.caffe_net.outputs[0]
         sess = rt.InferenceSession(self.model_def.SerializeToString())
-        outname = [output.name for output in sess.get_outputs()]
-        res = sess.run(outname, onnx_rt_dict)
-        np.testing.assert_allclose(pred[caffe_outname], res[0], rtol=1e-03, atol=1e-05)
+        onnx_outname = [output.name for output in sess.get_outputs()]
+        res = sess.run(onnx_outname, onnx_rt_dict)
+        caffe_outname = self.caffe_net.outputs
+
+        assert len(onnx_outname) == len(caffe_outname)
+        for idx in range(len(onnx_outname)):
+            np.testing.assert_allclose(
+                pred[caffe_outname[idx]], res[idx], rtol=1e-03, atol=1e-05
+            )
 
     def _print_inplace_dict(self):
         import json
