@@ -26,7 +26,6 @@ class ConvLayer(BaseLayer):
 
         if self._layer.convolution_param.pad != []:
             pads = list(self._layer.convolution_param.pad) * 4
-            attr_dict["pads"] = pads
         elif (
             self._layer.convolution_param.pad_h != 0
             or self._layer.convolution_param.pad_w != 0
@@ -35,12 +34,19 @@ class ConvLayer(BaseLayer):
                 self._layer.convolution_param.pad_h,
                 self._layer.convolution_param.pad_w,
             ] * 2
-            attr_dict["pads"] = pads
-
+        else:
+            pads = [0, 0, 0, 0]
+        
+        attr_dict["pads"] = pads
         if self._layer.convolution_param.stride != []:
             strides = list(self._layer.convolution_param.stride) * 2
-            attr_dict["strides"] = strides
-
+        else:
+            strides = [
+                self._layer.convolution_param.stride_h,
+                self._layer.convolution_param.stride_w,
+            ]
+        
+        attr_dict["strides"] = strides
         kernel_shape = list(self._layer.convolution_param.kernel_size) * 2
         if self._layer.convolution_param.kernel_size == []:
             kernel_shape = [

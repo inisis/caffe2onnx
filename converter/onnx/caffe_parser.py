@@ -64,10 +64,7 @@ class caffe2onnx_converter:
                 conv_layer.generate_params(params_numpy)
                 conv_layer.generate_node()
 
-                self.nodes.append(conv_layer._node)
-
-                self.in_tensor_value_info.extend(conv_layer._in_tensor_value_info)
-                self.init_tensor.extend(conv_layer._init_tensor)
+                self._node_post_process(conv_layer)
             elif layer.type == "BatchNorm":
                 batchnorm_layer = ops.BatchNormLayer(layer)
 
@@ -107,10 +104,8 @@ class caffe2onnx_converter:
                     )
 
                 batchnorm_layer.generate_node()
-                self.nodes.append(batchnorm_layer._node)
-
-                self.in_tensor_value_info.extend(batchnorm_layer._in_tensor_value_info)
-                self.init_tensor.extend(batchnorm_layer._init_tensor)
+                
+                self._node_post_process(batchnorm_layer)
             elif layer.type == "Scale":
                 idx = self._get_layer_index(layer)
                 if self.caffe_net.layers[idx - 1].type == "BatchNorm":
@@ -136,7 +131,8 @@ class caffe2onnx_converter:
 
                     relu_layer._out_names.append(this_layer_output_name)
                     relu_layer.generate_node()
-                    self.nodes.append(relu_layer._node)
+
+                    self._node_post_process(relu_layer)
             elif layer.type == "Pooling":
                 pooling_layer = ops.PoolingLayer(layer)
                 for idx in range(len(layer.bottom)):
@@ -145,6 +141,8 @@ class caffe2onnx_converter:
                         last_layer_output_name = self.inplace_dict[layer.bottom[idx]][
                             last_key
                         ]["new_output"]
+                    else:
+                        last_layer_output_name = layer.bottom[idx]
 
                 pooling_layer._in_names.append(last_layer_output_name)
                 pooling_layer._out_names.extend(list(layer.top))
@@ -152,7 +150,7 @@ class caffe2onnx_converter:
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
 
                 pooling_layer.generate_node(shape)
-                self.nodes.append(pooling_layer._node)
+                self._node_post_process(pooling_layer)
             elif layer.type == "Eltwise":
                 eltwise_layer = ops.EltwiseLayer(layer)
 
@@ -167,8 +165,9 @@ class caffe2onnx_converter:
                         eltwise_layer._in_names.append(layer.bottom[idx])
                 eltwise_layer._out_names.extend(list(layer.top))
 
-                eltwise_layer.generate_node(shape)
-                self.nodes.append(eltwise_layer._node)
+                eltwise_layer.generate_node()
+                
+                self._node_post_process(eltwise_layer)
             elif layer.type == "InnerProduct":
                 reshape_layer = ops.Reshapelayer(layer)
 
@@ -180,9 +179,8 @@ class caffe2onnx_converter:
 
                 reshape_layer.generate_params(shape)
                 reshape_layer.generate_node()
-                self.nodes.append(reshape_layer._node)
-                self.in_tensor_value_info.extend(reshape_layer._in_tensor_value_info)
-                self.init_tensor.extend(reshape_layer._init_tensor)
+
+                self._node_post_process(reshape_layer)
 
                 gemm_layer = ops.GemmLayer(layer)
                 gemm_layer._in_names.append(reshape_out_name)
@@ -192,22 +190,75 @@ class caffe2onnx_converter:
 
                 gemm_layer.generate_params(params_numpy)
                 gemm_layer.generate_node()
-                self.nodes.append(gemm_layer._node)
-                self.in_tensor_value_info.extend(gemm_layer._in_tensor_value_info)
-                self.init_tensor.extend(gemm_layer._init_tensor)
+                
+                self._node_post_process(gemm_layer)
             elif layer.type == "Softmax":
                 softmax_layer = ops.SoftmaxLayer(layer)
                 softmax_layer._in_names.extend(list(layer.bottom))
                 softmax_layer._out_names.extend(list(layer.top))
                 softmax_layer.generate_node()
-                self.nodes.append(softmax_layer._node)
+
+                self._node_post_process(softmax_layer)
+            elif layer.type == "Sigmoid":
+                sigmoid_layer = ops.SigmoidLayer(layer)
+                sigmoid_layer._in_names.extend(list(layer.bottom))
+                sigmoid_layer._out_names.extend(list(layer.top))
+                sigmoid_layer.generate_node()
+
+                self._node_post_process(sigmoid_layer)
+            elif layer.type == "Concat":
+                concat_layer = ops.ConcatLayer(layer)
+                concat_layer._in_names.extend(list(layer.bottom))
+                concat_layer._out_names.extend(list(layer.top))
+                concat_layer.generate_node()
+                
+                self._node_post_process(concat_layer)
+            elif layer.type == "Deconvolution":
+                deconv_layer = ops.DeconvLayer(layer)
+                for idx in range(len(layer.bottom)):
+                    if layer.bottom[idx] in self.inplace_dict.keys():
+                        last_key = list(self.inplace_dict[layer.bottom[idx]].keys())[-1]
+                        last_layer_output_name = self.inplace_dict[layer.bottom[idx]][
+                            last_key
+                        ]["new_output"]
+                        deconv_layer._in_names.append(last_layer_output_name)
+                    else:
+                        deconv_layer._in_names.extend(list(layer.bottom))
+
+                deconv_layer._out_names.extend(list(layer.top))
+
+                params = self.caffe_net.params[layer.name]
+                params_numpy = self._param_to_numpy(params)
+
+                deconv_layer.generate_params(params_numpy)
+                deconv_layer.generate_node()
+
+                self._node_post_process(deconv_layer)
+            elif layer.type == "Reshape":
+                reshape_layer = ops.Reshapelayer(layer)
+
+                reshape_layer._in_names.extend(list(layer.bottom))
+                reshape_layer._out_names.extend(list(layer.top))
+
+                reshape_layer.generate_params()
+                reshape_layer.generate_node()
+
+                self._node_post_process(reshape_layer)
+            elif layer.type == "Permute":
+                permute_layer = ops.PermuteLayer(layer)
+
+                permute_layer._in_names.extend(list(layer.bottom))
+                permute_layer._out_names.extend(list(layer.top))
+                permute_layer.generate_node()
+
+                self._node_post_process(permute_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
         for input_name in self.caffe_net.inputs:
             shape = self.caffe_net.blobs[input_name].shape
             shape_str = " ".join(str(e) for e in shape)
-            logging.info("caffe output: " + input_name + "shape: " + shape_str)
+            logging.info("caffe input: " + input_name + " shape: " + shape_str)
 
             input_layer = ops.InputLayer()
             input_layer._generate_input(input_name, shape)
@@ -216,15 +267,15 @@ class caffe2onnx_converter:
         for output_name in self.caffe_net.outputs:
             shape = self.caffe_net.blobs[output_name].shape
             shape_str = " ".join(str(e) for e in shape)
-            logging.info("caffe output: " + output_name + "shape: " + shape_str)
             if output_name in self.inplace_dict.keys():
                 last_key = list(self.inplace_dict[output_name].keys())[-1]
                 output_name = self.inplace_dict[output_name][last_key]["new_output"]
 
             output_layer = ops.OutputLayer()
             output_layer._generate_output(output_name, shape)
+            logging.info("caffe output: " + output_name + " shape: " + shape_str)
             self.out_tensor_value_info.extend(output_layer._out_tensor_value_info)
-
+        
         graph_def = helper.make_graph(
             self.nodes,
             self.onnx_file_name,
@@ -269,6 +320,11 @@ class caffe2onnx_converter:
             np.testing.assert_allclose(
                 pred[caffe_outname[idx]], res[idx], rtol=1e-03, atol=1e-05
             )
+
+    def _node_post_process(self, onnx_layer):
+        self.nodes.append(onnx_layer._node)
+        self.in_tensor_value_info.extend(onnx_layer._in_tensor_value_info)
+        self.init_tensor.extend(onnx_layer._init_tensor)
 
     def _print_inplace_dict(self):
         import json

@@ -8,3 +8,7 @@ from layers.eltwise_layer import EltwiseLayer
 from layers.reshape_layer import Reshapelayer
 from layers.gemm_layer import GemmLayer
 from layers.softmax_layer import SoftmaxLayer
+from layers.sigmoid_layer import SigmoidLayer
+from layers.concat_layer import ConcatLayer
+from layers.deconv_layer import DeconvLayer
+from layers.permute_layer import PermuteLayer

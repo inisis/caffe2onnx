@@ -10,7 +10,7 @@ class EltwiseLayer(BaseLayer):
     def __init__(self, layer):
         super(EltwiseLayer, self).__init__(layer)
 
-    def generate_node(self, input_shape):
+    def generate_node(self):
         if self._layer.eltwise_param.operation == 0:
             node = helper.make_node(
                 "Mul", self._in_names, self._out_names, self._layer.name
