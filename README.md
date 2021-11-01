@@ -13,3 +13,4 @@
 > * Deconvolution
 > * Reshape
 > * Permute
+> * Scale

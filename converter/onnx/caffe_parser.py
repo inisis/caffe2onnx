@@ -110,6 +110,30 @@ class caffe2onnx_converter:
                 idx = self._get_layer_index(layer)
                 if self.caffe_net.layers[idx - 1].type == "BatchNorm":
                     continue
+                else:
+                    # scale = Mul + Add
+                    mul_layer = ops.MulLayer(layer)
+                    mul_out_name = layer.name + "_reshape_out"
+
+                    mul_layer._in_names.extend(list(layer.bottom))
+                    mul_layer._out_names.append(mul_out_name)
+
+                    params_scale = self.caffe_net.params[layer.name]
+                    params_scale_numpy = self._param_to_numpy(params_scale)
+
+                    shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                    mul_layer.generate_params(params_scale_numpy, shape)
+                    mul_layer.generate_node()
+                    self._node_post_process(mul_layer)
+
+                    add_layer = ops.AddLayer(layer)
+
+                    add_layer._in_names.append(mul_out_name)
+                    add_layer._out_names.extend(list(layer.top))
+
+                    add_layer.generate_params(params_scale_numpy, shape)
+                    add_layer.generate_node()
+                    self._node_post_process(add_layer)
             elif layer.type == "ReLU":
                 relu_layer = ops.ReluLayer(layer)
                 if relu_layer._is_inplace == True:

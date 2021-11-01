@@ -12,3 +12,5 @@ from layers.sigmoid_layer import SigmoidLayer
 from layers.concat_layer import ConcatLayer
 from layers.deconv_layer import DeconvLayer
 from layers.permute_layer import PermuteLayer
+from layers.mul_layer import MulLayer
+from layers.add_layer import AddLayer
