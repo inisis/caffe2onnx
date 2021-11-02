@@ -5,7 +5,7 @@ from onnx import TensorProto as tp
 
 
 class BaseLayer(object):
-    def __init__(self, layer=None):
+    def __init__(self, layer=None, name=None):
         self._in_tensor_value_info = []
         self._init_tensor = []
         self._out_tensor_value_info = []
@@ -14,6 +14,8 @@ class BaseLayer(object):
         self._in_names = []
         self._out_names = []
         self._layer = copy.deepcopy(layer)
+        if layer != None and name != None:
+            self._layer.name += name
         self._is_inplace = False
 
         self._check_is_inplace()

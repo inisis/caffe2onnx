@@ -19,3 +19,5 @@
 > * Bnll
 > * Selu
 > * Sqrt
+> * CRelu
+> * Abs

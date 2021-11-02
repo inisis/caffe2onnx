@@ -16,8 +16,12 @@ class ConcatLayer(BaseLayer):
 
         return attr_dict
 
-    def generate_node(self):
-        attr_dict = self.get_concat_attr()
+    def generate_node(self, axis=None):
+        if axis == None:
+            attr_dict = self.get_concat_attr()
+        else:
+            attr_dict = {"axis": axis}
+
         node = helper.make_node(
             "Concat", self._in_names, self._out_names, self._layer.name, **attr_dict
         )

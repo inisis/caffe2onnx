@@ -20,3 +20,5 @@ from layers.bnll_layer import BnllLayer
 from layers.selu_layer import SeluLayer
 from layers.sqrt_layer import SqrtLayer
 from layers.cosine_layer import CosineLayer
+from layers.neg_layer import NegLayer
+from layers.abs_layer import AbsLayer

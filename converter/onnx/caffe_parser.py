@@ -379,6 +379,41 @@ class caffe2onnx_converter:
                 cosine_layer.generate_node()
 
                 self._node_post_process(cosine_layer)
+            elif layer.type == "CReLU":
+                relu_layer = ops.ReluLayer(layer, "_relu")
+                relu_output_name = layer.name + "_relu_out"
+                relu_layer._in_names.extend(list(layer.bottom))
+                relu_layer._out_names.append(relu_output_name)
+                relu_layer.generate_node()
+                self._node_post_process(relu_layer)
+
+                neg_layer = ops.NegLayer(layer, "_neg")
+                neg_output_name = layer.name + "_neg_out"
+                neg_layer._in_names.extend(list(layer.bottom))
+                neg_layer._out_names.append(neg_output_name)
+                neg_layer.generate_node()
+                self._node_post_process(neg_layer)
+
+                relu_neg_layer = ops.ReluLayer(layer, "_relu_neg")
+                relu_neg_output_name = layer.name + "_relu_neg_out"
+                relu_neg_layer._in_names.append(neg_output_name)
+                relu_neg_layer._out_names.append(relu_neg_output_name)
+                relu_neg_layer.generate_node()
+                self._node_post_process(relu_neg_layer)
+
+                concat_layer = ops.ConcatLayer(layer)
+                relu_neg_output_name = layer.name + "_relu_neg_out"
+                concat_layer._in_names.extend([relu_output_name, relu_neg_output_name])
+                concat_layer._out_names.extend(list(layer.top))
+                concat_layer.generate_node(layer.crelu_param.axis)
+                self._node_post_process(concat_layer)
+            elif layer.type == "AbsVal":
+                abs_layer = ops.AbsLayer(layer)
+                abs_layer._in_names.extend(list(layer.bottom))
+                abs_layer._out_names.extend(list(layer.top))
+                abs_layer.generate_node()
+
+                self._node_post_process(abs_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
