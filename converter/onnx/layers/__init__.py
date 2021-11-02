@@ -18,3 +18,4 @@ from layers.log_layer import LogLayer
 from layers.power_layer import PowerLayer
 from layers.bnll_layer import BnllLayer
 from layers.selu_layer import SeluLayer
+from layers.sqrt_layer import SqrtLayer

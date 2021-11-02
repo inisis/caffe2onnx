@@ -360,6 +360,13 @@ class caffe2onnx_converter:
                 selu_layer.generate_node()
 
                 self._node_post_process(selu_layer)
+            elif layer.type == "Sqrt":
+                sqrt_layer = ops.SqrtLayer(layer)
+                sqrt_layer._in_names.extend(list(layer.bottom))
+                sqrt_layer._out_names.extend(list(layer.top))
+                sqrt_layer.generate_node()
+
+                self._node_post_process(sqrt_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 

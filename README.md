@@ -18,3 +18,4 @@
 > * Power
 > * Bnll
 > * Selu
+> * Sqrt
