@@ -60,9 +60,9 @@ class caffe2onnx_converter:
 
                 params = self.caffe_net.params[layer.name]
                 params_numpy = self._param_to_numpy(params)
-
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
                 conv_layer.generate_params(params_numpy)
-                conv_layer.generate_node()
+                conv_layer.generate_node(shape)
 
                 self._node_post_process(conv_layer)
             elif layer.type == "BatchNorm":
