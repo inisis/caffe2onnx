@@ -12,7 +12,15 @@ class PermuteLayer(BaseLayer):
 
     def get_permute_attr(self):
         attr_dict = {"perm": []}
-        attr_dict["perm"] = self._layer.permute_param.order
+        if len(self._layer.permute_param.order) != 4:
+            order_list = [0, 1, 2, 3]
+            permute_order = self._layer.permute_param.order
+            for element in permute_order:
+                order_list.remove(element)
+            permute_order.extend(order_list)
+            attr_dict["perm"] = permute_order
+        else:
+            attr_dict["perm"] = self._layer.permute_param.order
 
         return attr_dict
 
