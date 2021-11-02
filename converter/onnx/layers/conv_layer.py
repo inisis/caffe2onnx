@@ -140,8 +140,7 @@ class ConvLayer(BaseLayer):
 
             attr_dict["pads"] = pads
             attr_dict["group"] = self._layer.convolution_param.group
-        print(attr_dict)
-        input()
+
         return attr_dict
 
     def create_conv_weight(self, params: np.ndarray):
