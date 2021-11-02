@@ -17,3 +17,4 @@
 > * Log
 > * Power
 > * Bnll
+> * Selu

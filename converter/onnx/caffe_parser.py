@@ -353,6 +353,13 @@ class caffe2onnx_converter:
                 bnll_layer.generate_node()
 
                 self._node_post_process(bnll_layer)
+            elif layer.type == "SELU":
+                selu_layer = ops.SeluLayer(layer)
+                selu_layer._in_names.extend(list(layer.bottom))
+                selu_layer._out_names.extend(list(layer.top))
+                selu_layer.generate_node()
+
+                self._node_post_process(selu_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
