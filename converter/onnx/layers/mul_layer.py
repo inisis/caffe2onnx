@@ -83,3 +83,8 @@ class MulLayer(BaseLayer):
         elif self._layer.type == "Power":
             self._layer.name = self._layer.name + "_mul"
             self.create_log_weight(params[0])
+        elif self._layer.type == "Exp":
+            self._layer.name = self._layer.name + "_mul"
+            self.create_log_weight(params[0])
+        else:
+            raise Exception("unsupported layer type : {}".format(self._layer.type))

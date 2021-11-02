@@ -277,7 +277,7 @@ class caffe2onnx_converter:
 
                 permute_layer._in_names.extend(list(layer.bottom))
                 permute_layer._out_names.extend(list(layer.top))
-                
+
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
                 permute_layer.generate_node(shape)
 
@@ -416,6 +416,53 @@ class caffe2onnx_converter:
                 abs_layer.generate_node()
 
                 self._node_post_process(abs_layer)
+            elif layer.type == "Exp":
+                # log layer = log (mul + add)
+
+                mul_layer = ops.MulLayer(layer)
+                mul_out_name = layer.name + "_mul_out"
+
+                mul_layer._in_names.extend(list(layer.bottom))
+                mul_layer._out_names.append(mul_out_name)
+
+                params_exp = [
+                    np.array(layer.exp_param.scale),
+                    np.array(layer.exp_param.shift),
+                ]
+                params_exp_numpy = params_exp
+
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                mul_layer.generate_params(params_exp_numpy, shape)
+                mul_layer.generate_node()
+                self._node_post_process(mul_layer)
+
+                add_layer = ops.AddLayer(layer)
+                add_layer._in_names.append(mul_out_name)
+
+                add_out_name = layer.name + "_add_out"
+                add_layer._out_names.append(add_out_name)
+
+                add_layer.generate_params(params_exp_numpy, shape)
+                add_layer.generate_node()
+                self._node_post_process(add_layer)
+
+                if layer.exp_param.base == -1:
+                    exp_layer = ops.ExpLayer(layer)
+                    exp_layer._in_names.append(add_out_name)
+                    exp_layer._out_names.extend(list(layer.top))
+
+                    exp_layer.generate_node()
+                    self._node_post_process(exp_layer)
+                else:
+                    power_layer = ops.PowerLayer(layer)
+                    params_power = np.array(layer.exp_param.base)
+
+                    power_layer.generate_params(params_power)
+                    power_layer._in_names.append(add_out_name)
+                    power_layer._out_names.extend(list(layer.top))
+
+                    power_layer.generate_node()
+                    self._node_post_process(power_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 

@@ -21,3 +21,4 @@
 > * Sqrt
 > * CRelu
 > * Abs
+> * Exp

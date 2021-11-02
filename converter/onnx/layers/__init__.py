@@ -22,3 +22,4 @@ from layers.sqrt_layer import SqrtLayer
 from layers.cosine_layer import CosineLayer
 from layers.neg_layer import NegLayer
 from layers.abs_layer import AbsLayer
+from layers.exp_layer import ExpLayer

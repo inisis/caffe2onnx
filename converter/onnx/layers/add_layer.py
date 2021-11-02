@@ -87,3 +87,9 @@ class AddLayer(BaseLayer):
             self._layer.name = self._layer.name + "_add"
             if (len(params)) == 2:
                 self.create_log_bias(params[1])
+        elif self._layer.type == "Exp":
+            self._layer.name = self._layer.name + "_add"
+            if (len(params)) == 2:
+                self.create_log_bias(params[1])
+        else:
+            raise Exception("unsupported layer type : {}".format(self._layer.type))
