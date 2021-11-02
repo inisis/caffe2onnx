@@ -118,26 +118,6 @@ class ConvLayer(BaseLayer):
             else:
                 pads = [0, 0, 0, 0]
 
-            h = (
-                input_shape[2]
-                - kernel_shape[0]
-                + pads[0]
-                + pads[2]
-                - (kernel_shape[0] - 1) * (dilations[0] - 1)
-            ) / strides[0] + 1
-            if h > int(h) and self._layer.convolution_param.pad == []:
-                pads[2] += 1
-
-            w = (
-                input_shape[3]
-                - kernel_shape[1]
-                + pads[1]
-                + pads[3]
-                - (kernel_shape[1] - 1) * (dilations[1] - 1)
-            ) / strides[1] + 1
-            if w > int(w) and self._layer.convolution_param.pad == []:
-                pads[3] += 1
-
             attr_dict["pads"] = pads
             attr_dict["group"] = self._layer.convolution_param.group
 
