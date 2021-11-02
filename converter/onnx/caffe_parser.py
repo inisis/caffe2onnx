@@ -154,9 +154,13 @@ class caffe2onnx_converter:
                         )
 
                     relu_layer._out_names.append(this_layer_output_name)
-                    relu_layer.generate_node()
+                else:
+                    relu_layer._in_names.extend(list(layer.bottom))
+                    relu_layer._out_names.extend(list(layer.top))
 
-                    self._node_post_process(relu_layer)
+                relu_layer.generate_node()
+                self._node_post_process(relu_layer)
+
             elif layer.type == "Pooling":
                 pooling_layer = ops.PoolingLayer(layer)
                 for idx in range(len(layer.bottom)):
