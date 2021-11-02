@@ -277,7 +277,9 @@ class caffe2onnx_converter:
 
                 permute_layer._in_names.extend(list(layer.bottom))
                 permute_layer._out_names.extend(list(layer.top))
-                permute_layer.generate_node()
+                
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                permute_layer.generate_node(shape)
 
                 self._node_post_process(permute_layer)
             elif layer.type == "Log":
