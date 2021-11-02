@@ -371,6 +371,14 @@ class caffe2onnx_converter:
                 sqrt_layer.generate_node()
 
                 self._node_post_process(sqrt_layer)
+            elif layer.type == "Cos":
+                cosine_layer = ops.CosineLayer(layer)
+
+                cosine_layer._in_names.extend(list(layer.bottom))
+                cosine_layer._out_names.extend(list(layer.top))
+                cosine_layer.generate_node()
+
+                self._node_post_process(cosine_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
