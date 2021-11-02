@@ -346,6 +346,13 @@ class caffe2onnx_converter:
                 pow_layer.generate_params(params_power)
                 pow_layer.generate_node()
                 self._node_post_process(pow_layer)
+            elif layer.type == "BNLL":
+                bnll_layer = ops.BnllLayer(layer)
+                bnll_layer._in_names.extend(list(layer.bottom))
+                bnll_layer._out_names.extend(list(layer.top))
+                bnll_layer.generate_node()
+
+                self._node_post_process(bnll_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 

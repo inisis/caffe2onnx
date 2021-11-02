@@ -16,3 +16,4 @@ from layers.mul_layer import MulLayer
 from layers.add_layer import AddLayer
 from layers.log_layer import LogLayer
 from layers.power_layer import PowerLayer
+from layers.bnll_layer import BnllLayer

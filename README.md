@@ -15,3 +15,5 @@
 > * Permute
 > * Scale
 > * Log
+> * Power
+> * Bnll
