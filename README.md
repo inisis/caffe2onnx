@@ -14,3 +14,4 @@
 > * Reshape
 > * Permute
 > * Scale
+> * Log

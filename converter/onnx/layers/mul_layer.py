@@ -15,25 +15,46 @@ class MulLayer(BaseLayer):
 
         total_axes = len(shape)
         param_axes = len(params.shape)
-        if (self._layer.scale_param.axis > -total_axes and self._layer.scale_param.axis <= -1):
+        if (
+            self._layer.scale_param.axis > -total_axes
+            and self._layer.scale_param.axis <= -1
+        ):
             axis = total_axes + self._layer.scale_param.axis
-        elif (self._layer.scale_param.axis >= 0 and self._layer.scale_param.axis < total_axes):
+        elif (
+            self._layer.scale_param.axis >= 0
+            and self._layer.scale_param.axis < total_axes
+        ):
             axis = self._layer.scale_param.axis
         else:
             raise Exception("unsupported axis: {}".format(self._layer.scale_param.axis))
 
         if self._layer.scale_param.num_axes == -1:
             shape_end = total_axes
-            assert(param_axes == (shape_end - axis))
+            assert param_axes == (shape_end - axis)
         else:
             shape_end = axis + self._layer.scale_param.num_axes
-            assert(param_axes == (shape_end - axis))
+            assert param_axes == (shape_end - axis)
 
         param_type = tp.FLOAT
 
         for idx in range(total_axes - axis - param_axes):
             params = params.reshape(*params.shape, 1)
 
+        param_shape = params.shape
+        param_tensor_value_info = helper.make_tensor_value_info(
+            param_name, param_type, param_shape
+        )
+        param_tensor = helper.make_tensor(
+            param_name, param_type, param_shape, params.flatten()
+        )
+        self._in_names.append(param_name)
+        self._in_tensor_value_info.append(param_tensor_value_info)
+        self._init_tensor.append(param_tensor)
+
+    def create_log_weight(self, params: np.ndarray):
+        param_name = self._layer.name + "_weight"
+
+        param_type = tp.FLOAT
         param_shape = params.shape
         param_tensor_value_info = helper.make_tensor_value_info(
             param_name, param_type, param_shape
@@ -53,5 +74,9 @@ class MulLayer(BaseLayer):
         self._node = node
 
     def generate_params(self, params, shape):
-        self._layer.name = self._layer.name + "_mul"
-        self.create_scale_weight(params[0], shape)
+        if self._layer.type == "Scale":
+            self._layer.name = self._layer.name + "_mul"
+            self.create_scale_weight(params[0], shape)
+        elif self._layer.type == "Log":
+            self._layer.name = self._layer.name + "_mul"
+            self.create_log_weight(params[0])

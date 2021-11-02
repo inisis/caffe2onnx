@@ -14,3 +14,4 @@ from layers.deconv_layer import DeconvLayer
 from layers.permute_layer import PermuteLayer
 from layers.mul_layer import MulLayer
 from layers.add_layer import AddLayer
+from layers.log_layer import LogLayer

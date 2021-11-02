@@ -10,7 +10,7 @@ from layers.base_layer import BaseLayer
 class Reshapelayer(BaseLayer):
     def __init__(self, layer):
         super(Reshapelayer, self).__init__(layer)
-    
+
     def create_reshape_params_inner_product(self, params):
         param_name = self._layer.name + "_shape"
 
@@ -63,4 +63,3 @@ class Reshapelayer(BaseLayer):
             self.create_reshape_params_inner_product(params)
         else:
             self.create_reshape_params()
-

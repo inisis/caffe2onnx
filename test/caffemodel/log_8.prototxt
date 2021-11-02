@@ -1,0 +1,24 @@
+name: "log_full_028"
+layer {
+  name: "data"
+  type: "Input"
+  top: "data"
+  input_param {
+    shape {
+      dim: 1
+      dim: 255
+      dim: 21
+      dim: 21
+    }
+  }
+}
+layer {
+  name: "layer1"
+  type: "Log"
+  bottom: "data"
+  top: "layer1"
+  log_param {
+    scale: -0.66
+    shift: -0.42
+  }
+}

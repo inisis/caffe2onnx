@@ -40,8 +40,11 @@ class DeconvLayer(BaseLayer):
         if self._layer.convolution_param.stride != []:
             strides = list(self._layer.convolution_param.stride) * 2
         else:
-            strides = [self._layer.convolution_param.stride_h, self._layer.convolution_param.stride_w]
-        
+            strides = [
+                self._layer.convolution_param.stride_h,
+                self._layer.convolution_param.stride_w,
+            ]
+
         attr_dict["strides"] = strides
 
         kernel_shape = list(self._layer.convolution_param.kernel_size) * 2
@@ -90,7 +93,11 @@ class DeconvLayer(BaseLayer):
         attr_dict = self.get_conv_attr()
         logging.debug(attr_dict)
         node = helper.make_node(
-            "ConvTranspose", self._in_names, self._out_names, self._layer.name, **attr_dict
+            "ConvTranspose",
+            self._in_names,
+            self._out_names,
+            self._layer.name,
+            **attr_dict
         )
         logging.info("deconv_layer: " + self._layer.name + " created")
         self._node = node

@@ -104,7 +104,7 @@ class caffe2onnx_converter:
                     )
 
                 batchnorm_layer.generate_node()
-                
+
                 self._node_post_process(batchnorm_layer)
             elif layer.type == "Scale":
                 idx = self._get_layer_index(layer)
@@ -113,7 +113,7 @@ class caffe2onnx_converter:
                 else:
                     # scale = Mul + Add
                     mul_layer = ops.MulLayer(layer)
-                    mul_out_name = layer.name + "_reshape_out"
+                    mul_out_name = layer.name + "_mul_out"
 
                     mul_layer._in_names.extend(list(layer.bottom))
                     mul_layer._out_names.append(mul_out_name)
@@ -190,7 +190,7 @@ class caffe2onnx_converter:
                 eltwise_layer._out_names.extend(list(layer.top))
 
                 eltwise_layer.generate_node()
-                
+
                 self._node_post_process(eltwise_layer)
             elif layer.type == "InnerProduct":
                 reshape_layer = ops.Reshapelayer(layer)
@@ -214,7 +214,7 @@ class caffe2onnx_converter:
 
                 gemm_layer.generate_params(params_numpy)
                 gemm_layer.generate_node()
-                
+
                 self._node_post_process(gemm_layer)
             elif layer.type == "Softmax":
                 softmax_layer = ops.SoftmaxLayer(layer)
@@ -235,7 +235,7 @@ class caffe2onnx_converter:
                 concat_layer._in_names.extend(list(layer.bottom))
                 concat_layer._out_names.extend(list(layer.top))
                 concat_layer.generate_node()
-                
+
                 self._node_post_process(concat_layer)
             elif layer.type == "Deconvolution":
                 deconv_layer = ops.DeconvLayer(layer)
@@ -276,6 +276,41 @@ class caffe2onnx_converter:
                 permute_layer.generate_node()
 
                 self._node_post_process(permute_layer)
+            elif layer.type == "Log":
+                # log layer = log (mul + add)
+                assert layer.log_param.base == -1  # log base e
+                mul_layer = ops.MulLayer(layer)
+                mul_out_name = layer.name + "_mul_out"
+
+                mul_layer._in_names.extend(list(layer.bottom))
+                mul_layer._out_names.append(mul_out_name)
+
+                params_log = [
+                    np.array(layer.log_param.scale),
+                    np.array(layer.log_param.shift),
+                ]
+                params_log_numpy = params_log
+
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                mul_layer.generate_params(params_log_numpy, shape)
+                mul_layer.generate_node()
+                self._node_post_process(mul_layer)
+
+                add_layer = ops.AddLayer(layer)
+                add_out_name = layer.name + "_add_out"
+                add_layer._in_names.append(mul_out_name)
+                add_layer._out_names.append(add_out_name)
+
+                add_layer.generate_params(params_log_numpy, shape)
+                add_layer.generate_node()
+                self._node_post_process(add_layer)
+
+                log_layer = ops.LogLayer(layer)
+                log_layer._in_names.append(add_out_name)
+                log_layer._out_names.extend(list(layer.top))
+
+                log_layer.generate_node()
+                self._node_post_process(log_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
@@ -299,7 +334,7 @@ class caffe2onnx_converter:
             output_layer._generate_output(output_name, shape)
             logging.info("caffe output: " + output_name + " shape: " + shape_str)
             self.out_tensor_value_info.extend(output_layer._out_tensor_value_info)
-        
+
         graph_def = helper.make_graph(
             self.nodes,
             self.onnx_file_name,
