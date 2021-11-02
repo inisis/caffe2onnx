@@ -71,7 +71,7 @@ class AddLayer(BaseLayer):
         node = helper.make_node(
             "Add", self._in_names, self._out_names, self._layer.name
         )
-        logging.info("scale_add_layer: " + self._layer.name + " created")
+        logging.info("add_layer: " + self._layer.name + " created")
         self._node = node
 
     def generate_params(self, params, shape):
@@ -80,6 +80,10 @@ class AddLayer(BaseLayer):
             if (len(params)) == 2:
                 self.create_scale_bias(params[1], shape)
         elif self._layer.type == "Log":
+            self._layer.name = self._layer.name + "_add"
+            if (len(params)) == 2:
+                self.create_log_bias(params[1])
+        elif self._layer.type == "Power":
             self._layer.name = self._layer.name + "_add"
             if (len(params)) == 2:
                 self.create_log_bias(params[1])

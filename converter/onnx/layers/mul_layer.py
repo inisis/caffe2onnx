@@ -70,7 +70,7 @@ class MulLayer(BaseLayer):
         node = helper.make_node(
             "Mul", self._in_names, self._out_names, self._layer.name
         )
-        logging.info("scale_mul_layer: " + self._layer.name + " created")
+        logging.info("mul_layer: " + self._layer.name + " created")
         self._node = node
 
     def generate_params(self, params, shape):
@@ -78,5 +78,8 @@ class MulLayer(BaseLayer):
             self._layer.name = self._layer.name + "_mul"
             self.create_scale_weight(params[0], shape)
         elif self._layer.type == "Log":
+            self._layer.name = self._layer.name + "_mul"
+            self.create_log_weight(params[0])
+        elif self._layer.type == "Power":
             self._layer.name = self._layer.name + "_mul"
             self.create_log_weight(params[0])

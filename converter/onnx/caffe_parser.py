@@ -311,6 +311,41 @@ class caffe2onnx_converter:
 
                 log_layer.generate_node()
                 self._node_post_process(log_layer)
+            elif layer.type == "Power":
+                # power layer = (mul + add) ^ power
+                mul_layer = ops.MulLayer(layer)
+                mul_out_name = layer.name + "_mul_out"
+
+                mul_layer._in_names.extend(list(layer.bottom))
+                mul_layer._out_names.append(mul_out_name)
+
+                params_power = [
+                    np.array(layer.power_param.scale),
+                    np.array(layer.power_param.shift),
+                ]
+                params_power_numpy = params_power
+
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                mul_layer.generate_params(params_power_numpy, shape)
+                mul_layer.generate_node()
+                self._node_post_process(mul_layer)
+
+                add_layer = ops.AddLayer(layer)
+                add_out_name = layer.name + "_add_out"
+                add_layer._in_names.append(mul_out_name)
+                add_layer._out_names.append(add_out_name)
+
+                add_layer.generate_params(params_power_numpy, shape)
+                add_layer.generate_node()
+                self._node_post_process(add_layer)
+
+                pow_layer = ops.PowerLayer(layer)
+                pow_layer._in_names.append(add_out_name)
+                pow_layer._out_names.extend(list(layer.top))
+                params_power = np.array(layer.power_param.power)
+                pow_layer.generate_params(params_power)
+                pow_layer.generate_node()
+                self._node_post_process(pow_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 

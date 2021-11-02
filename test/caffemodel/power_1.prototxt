@@ -1,0 +1,23 @@
+name: "power_full_001"
+layer {
+  name: "data"
+  type: "Input"
+  top: "data"
+  input_param {
+    shape {
+      dim: 1
+      dim: 4096
+    }
+  }
+}
+layer {
+  name: "layer1"
+  type: "Power"
+  bottom: "data"
+  top: "layer1"
+  power_param {
+    power: 1.0
+    scale: 1.0
+    shift: 0.0
+  }
+}
