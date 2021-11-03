@@ -490,6 +490,15 @@ class caffe2onnx_converter:
                 tanh_layer._out_names.extend(list(layer.top))
                 tanh_layer.generate_node()
                 self._node_post_process(tanh_layer)
+            elif layer.type == "Tile":
+                tile_layer = ops.TileLayer(layer)
+                tile_layer._in_names.extend(list(layer.bottom))
+                tile_layer._out_names.extend(list(layer.top))
+
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+
+                tile_layer.generate_node(shape)
+                self._node_post_process(tile_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
