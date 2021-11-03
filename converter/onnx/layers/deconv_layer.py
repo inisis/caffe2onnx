@@ -39,11 +39,16 @@ class DeconvLayer(BaseLayer):
 
         if self._layer.convolution_param.stride != []:
             strides = list(self._layer.convolution_param.stride) * 2
-        else:
+        elif (
+            self._layer.convolution_param.stride_h != 0
+            or self._layer.convolution_param.stride_w != 0
+        ):
             strides = [
                 self._layer.convolution_param.stride_h,
                 self._layer.convolution_param.stride_w,
             ]
+        else:
+            strides = [1, 1]
 
         attr_dict["strides"] = strides
 
