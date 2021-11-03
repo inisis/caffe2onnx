@@ -243,12 +243,32 @@ class caffe2onnx_converter:
 
                 self._node_post_process(gemm_layer)
             elif layer.type == "Softmax":
-                softmax_layer = ops.SoftmaxLayer(layer)
-                softmax_layer._in_names.extend(list(layer.bottom))
-                softmax_layer._out_names.extend(list(layer.top))
+                permute_layer = ops.PermuteLayer(layer, "_permute")
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                permute_out_name = layer.name + "_permute_out"
+                permute_layer._in_names.extend(list(layer.bottom))
+                permute_layer._out_names.append(permute_out_name)
+                permute_layer.generate_node(shape)
+
+                self._node_post_process(permute_layer)
+
+                softmax_layer = ops.SoftmaxLayer(layer, "_softmax")
+                softmax_out_name = layer.name + "_softmax_out"
+                softmax_layer._in_names.append(permute_out_name)
+                softmax_layer._out_names.append(softmax_out_name)
                 softmax_layer.generate_node()
 
                 self._node_post_process(softmax_layer)
+
+                permute_layer = ops.PermuteLayer(layer, "_post_permute")
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                permute_out_name = layer.name + "_permute_out"
+                permute_layer._in_names.append(softmax_out_name)
+                permute_layer._out_names.extend(list(layer.top))
+                permute_layer.generate_node(shape)
+
+                self._node_post_process(permute_layer)
+
             elif layer.type == "Sigmoid":
                 sigmoid_layer = ops.SigmoidLayer(layer)
                 sigmoid_layer._in_names.extend(list(layer.bottom))
@@ -563,7 +583,7 @@ class caffe2onnx_converter:
         onnx_rt_dict = {}
         for input_name in self.caffe_net.inputs:
             shape = self.caffe_net.blobs[input_name].shape
-            input_data = np.random.rand(*shape).astype(np.float32)
+            input_data = np.ones(shape).astype(np.float32)
             shape_str = " ".join(str(e) for e in shape)
             self.caffe_net.blobs[input_name].data[...] = input_data
             logging.info("caffe input: " + input_name + "shape: " + shape_str)
