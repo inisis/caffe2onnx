@@ -162,23 +162,40 @@ class caffe2onnx_converter:
                 self._node_post_process(relu_layer)
 
             elif layer.type == "Pooling":
-                pooling_layer = ops.PoolingLayer(layer)
-                for idx in range(len(layer.bottom)):
-                    if layer.bottom[idx] in self.inplace_dict.keys():
-                        last_key = list(self.inplace_dict[layer.bottom[idx]].keys())[-1]
-                        last_layer_output_name = self.inplace_dict[layer.bottom[idx]][
-                            last_key
-                        ]["new_output"]
-                    else:
-                        last_layer_output_name = layer.bottom[idx]
+                if layer.pooling_param.pool == 1 and layer.pooling_param.global_pooling != True:
+                    pad_layer = ops.PadLayer(layer, "_pad")
+                    pad_layer_out_name = layer.name + "_pad_out"
+                    pad_layer._in_names.extend(list(layer.bottom))
+                    pad_layer._out_names.append(pad_layer_out_name)
+                    pad_layer.generate_node()
 
-                pooling_layer._in_names.append(last_layer_output_name)
-                pooling_layer._out_names.extend(list(layer.top))
+                    self._node_post_process(pad_layer)
 
-                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                    pooling_layer = ops.PoolingLayer(layer)
+                    pooling_layer._in_names.append(pad_layer_out_name)
+                    pooling_layer._out_names.extend(list(layer.top))
+                    shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
 
-                pooling_layer.generate_node(shape)
-                self._node_post_process(pooling_layer)
+                    pooling_layer.generate_node(shape)
+                    self._node_post_process(pooling_layer)
+                else:
+                    pooling_layer = ops.PoolingLayer(layer)
+                    for idx in range(len(layer.bottom)):
+                        if layer.bottom[idx] in self.inplace_dict.keys():
+                            last_key = list(self.inplace_dict[layer.bottom[idx]].keys())[-1]
+                            last_layer_output_name = self.inplace_dict[layer.bottom[idx]][
+                                last_key
+                            ]["new_output"]
+                        else:
+                            last_layer_output_name = layer.bottom[idx]
+
+                    pooling_layer._in_names.append(last_layer_output_name)
+                    pooling_layer._out_names.extend(list(layer.top))
+
+                    shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+
+                    pooling_layer.generate_node(shape)
+                    self._node_post_process(pooling_layer)
             elif layer.type == "Eltwise":
                 eltwise_layer = ops.EltwiseLayer(layer)
 
@@ -418,7 +435,6 @@ class caffe2onnx_converter:
                 self._node_post_process(abs_layer)
             elif layer.type == "Exp":
                 # log layer = log (mul + add)
-
                 mul_layer = ops.MulLayer(layer)
                 mul_out_name = layer.name + "_mul_out"
 

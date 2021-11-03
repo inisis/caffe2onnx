@@ -74,6 +74,7 @@ class MulLayer(BaseLayer):
         self._node = node
 
     def generate_params(self, params, shape):
+        # refactor
         if self._layer.type == "Scale":
             self._layer.name = self._layer.name + "_mul"
             self.create_scale_weight(params[0], shape)
