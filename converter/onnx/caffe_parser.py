@@ -289,8 +289,10 @@ class caffe2onnx_converter:
 
                 reshape_layer._in_names.extend(list(layer.bottom))
                 reshape_layer._out_names.extend(list(layer.top))
-
-                reshape_layer.generate_params()
+                
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                
+                reshape_layer.generate_params(shape=shape)
                 reshape_layer.generate_node()
 
                 self._node_post_process(reshape_layer)

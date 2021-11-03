@@ -30,10 +30,36 @@ class Reshapelayer(BaseLayer):
         self._in_tensor_value_info.append(param_tensor_value_info)
         self._init_tensor.append(param_tensor)
 
-    def create_reshape_params(self):
-        param_name = self._layer.name + "_shape"
+    def create_reshape_params(self, shape):
+        param_name = self._layer.name + "_reshape"
+        reshape_dim = self._layer.reshape_param.shape.dim
+        
+        start_axis = self._layer.reshape_param.axis
+        num_axes = self._layer.reshape_param.num_axes
 
-        params = np.array(self._layer.reshape_param.shape.dim)
+        if num_axes == -1:
+            end_axis = len(shape)
+        else:
+            end_axis = start_axis + num_axes
+
+        num_axes_replaced = end_axis - start_axis
+        num_axes_retained = len(shape) - num_axes_replaced
+        dim = [0] * (num_axes_retained + len(reshape_dim))
+        top_shape_index = 0
+
+        for idx in range(start_axis):
+            dim[top_shape_index] = shape[idx];
+            top_shape_index+=1
+
+        for idx in range(len(reshape_dim)):
+            dim[top_shape_index] = reshape_dim[idx];
+            top_shape_index+=1
+
+        for idx in range(end_axis, len(shape)):
+            dim[top_shape_index] = shape[idx];
+            top_shape_index+=1
+
+        params = np.array(dim)
 
         param_type = tp.INT64
         param_shape = params.shape
@@ -57,9 +83,9 @@ class Reshapelayer(BaseLayer):
         logging.info("reshape_layer: " + self._layer.name + " created")
         self._node = node
 
-    def generate_params(self, params=None):
+    def generate_params(self, params=None, shape=None):
         if params is not None:
             self._layer.name = self._layer.name + "_reshape"
             self.create_reshape_params_inner_product(params)
         else:
-            self.create_reshape_params()
+            self.create_reshape_params(shape)
