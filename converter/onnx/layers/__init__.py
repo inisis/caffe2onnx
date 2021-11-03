@@ -26,3 +26,4 @@ from layers.exp_layer import ExpLayer
 from layers.pad_layer import PadLayer
 from layers.tanh_layer import TanhLayer
 from layers.tile_layer import TileLayer
+from layers.prelu_layer import PReluLayer

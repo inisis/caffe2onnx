@@ -501,6 +501,17 @@ class caffe2onnx_converter:
 
                 tile_layer.generate_node(shape)
                 self._node_post_process(tile_layer)
+            elif layer.type == "PReLU":
+                prelu_layer = ops.PReluLayer(layer)
+                prelu_layer._in_names.extend(list(layer.bottom))
+                prelu_layer._out_names.extend(list(layer.top))
+                params_prelu = self.caffe_net.params[layer.name]
+                params_prelu_numpy = self._param_to_numpy(params_prelu)
+
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                
+                prelu_layer.generate_node(params_prelu_numpy[0], shape)
+                self._node_post_process(prelu_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 

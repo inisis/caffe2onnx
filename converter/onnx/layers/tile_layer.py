@@ -36,7 +36,6 @@ class TileLayer(BaseLayer):
         self._in_tensor_value_info.append(param_tensor_value_info)
         self._init_tensor.append(param_tensor)
 
-        return attr_dict
 
     def generate_node(self, shape):
         self.create_tile_params(shape)
