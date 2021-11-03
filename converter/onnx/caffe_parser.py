@@ -162,7 +162,10 @@ class caffe2onnx_converter:
                 self._node_post_process(relu_layer)
 
             elif layer.type == "Pooling":
-                if layer.pooling_param.pool == 1 and layer.pooling_param.global_pooling != True:
+                if (
+                    layer.pooling_param.pool == 1
+                    and layer.pooling_param.global_pooling != True
+                ):
                     pad_layer = ops.PadLayer(layer, "_pad")
                     pad_layer_out_name = layer.name + "_pad_out"
                     pad_layer._in_names.extend(list(layer.bottom))
@@ -182,10 +185,12 @@ class caffe2onnx_converter:
                     pooling_layer = ops.PoolingLayer(layer)
                     for idx in range(len(layer.bottom)):
                         if layer.bottom[idx] in self.inplace_dict.keys():
-                            last_key = list(self.inplace_dict[layer.bottom[idx]].keys())[-1]
-                            last_layer_output_name = self.inplace_dict[layer.bottom[idx]][
-                                last_key
-                            ]["new_output"]
+                            last_key = list(
+                                self.inplace_dict[layer.bottom[idx]].keys()
+                            )[-1]
+                            last_layer_output_name = self.inplace_dict[
+                                layer.bottom[idx]
+                            ][last_key]["new_output"]
                         else:
                             last_layer_output_name = layer.bottom[idx]
 
@@ -479,6 +484,12 @@ class caffe2onnx_converter:
 
                     power_layer.generate_node()
                     self._node_post_process(power_layer)
+            elif layer.type == "TanH":
+                tanh_layer = ops.TanhLayer(layer)
+                tanh_layer._in_names.extend(list(layer.bottom))
+                tanh_layer._out_names.extend(list(layer.top))
+                tanh_layer.generate_node()
+                self._node_post_process(tanh_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 

@@ -24,3 +24,4 @@ from layers.neg_layer import NegLayer
 from layers.abs_layer import AbsLayer
 from layers.exp_layer import ExpLayer
 from layers.pad_layer import PadLayer
+from layers.tanh_layer import TanhLayer
