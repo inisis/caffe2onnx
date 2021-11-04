@@ -13,7 +13,7 @@ class PReluLayer(BaseLayer):
 
     def create_prelu_params(self, params, shape):
         param_name = self._layer.name + "_prelu"
-        assert(params.shape[0] == shape[1])
+        assert params.shape[0] == shape[1]
 
         param_type = tp.FLOAT
         param_shape = [1] * len(shape)

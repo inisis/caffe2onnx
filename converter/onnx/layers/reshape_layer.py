@@ -33,7 +33,7 @@ class Reshapelayer(BaseLayer):
     def create_reshape_params(self, shape):
         param_name = self._layer.name + "_reshape"
         reshape_dim = self._layer.reshape_param.shape.dim
-        
+
         start_axis = self._layer.reshape_param.axis
         num_axes = self._layer.reshape_param.num_axes
 
@@ -48,16 +48,16 @@ class Reshapelayer(BaseLayer):
         top_shape_index = 0
 
         for idx in range(start_axis):
-            dim[top_shape_index] = shape[idx];
-            top_shape_index+=1
+            dim[top_shape_index] = shape[idx]
+            top_shape_index += 1
 
         for idx in range(len(reshape_dim)):
-            dim[top_shape_index] = reshape_dim[idx];
-            top_shape_index+=1
+            dim[top_shape_index] = reshape_dim[idx]
+            top_shape_index += 1
 
         for idx in range(end_axis, len(shape)):
-            dim[top_shape_index] = shape[idx];
-            top_shape_index+=1
+            dim[top_shape_index] = shape[idx]
+            top_shape_index += 1
 
         params = np.array(dim)
 

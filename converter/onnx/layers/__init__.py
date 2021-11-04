@@ -28,3 +28,4 @@ from layers.tanh_layer import TanhLayer
 from layers.tile_layer import TileLayer
 from layers.prelu_layer import PReluLayer
 from layers.sine_layer import SineLayer
+from layers.slice_layer import SliceLayer

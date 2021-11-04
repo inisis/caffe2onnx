@@ -117,7 +117,7 @@ class caffe2onnx_converter:
                     params_scale = self.caffe_net.params[layer.name]
                     params_scale_numpy = self._param_to_numpy(params_scale)
                     shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
-                    if(len(params_scale_numpy) == 2):
+                    if len(params_scale_numpy) == 2:
                         mul_out_name = layer.name + "_mul_out"
 
                         mul_layer._in_names.extend(list(layer.bottom))
@@ -144,7 +144,7 @@ class caffe2onnx_converter:
                         mul_layer.generate_params(params_scale_numpy, shape)
                         mul_layer.generate_node()
 
-                        self._node_post_process(mul_layer)                        
+                        self._node_post_process(mul_layer)
             elif layer.type == "ReLU":
                 relu_layer = ops.ReluLayer(layer)
                 if relu_layer._is_inplace == True:
@@ -320,9 +320,9 @@ class caffe2onnx_converter:
 
                 reshape_layer._in_names.extend(list(layer.bottom))
                 reshape_layer._out_names.extend(list(layer.top))
-                
+
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
-                
+
                 reshape_layer.generate_params(shape=shape)
                 reshape_layer.generate_node()
 
@@ -556,7 +556,7 @@ class caffe2onnx_converter:
                 params_prelu_numpy = self._param_to_numpy(params_prelu)
 
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
-                
+
                 prelu_layer.generate_node(params_prelu_numpy[0], shape)
 
                 self._node_post_process(prelu_layer)
@@ -567,6 +567,40 @@ class caffe2onnx_converter:
                 sine_layer.generate_node()
 
                 self._node_post_process(sine_layer)
+            elif layer.type == "Slice":
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                slice_point = list(layer.slice_param.slice_point)
+                axes = layer.slice_param.axis
+
+                if len(slice_point) != 0:
+                    assert len(list(layer.top)) == (len(slice_point) + 1)
+                else:
+                    assert shape[axes] % len(list(layer.top)) == 0
+                    slice_point = (
+                        np.linspace(0, shape[axes], len((layer.top)), endpoint=False)
+                        .astype(int)[1:]
+                        .tolist()
+                    )
+
+                start_index = [0]
+                slice_point = start_index + slice_point + [shape[axes]]
+
+                for idx in range(len(list(layer.top))):
+                    slice_layer = ops.SliceLayer(layer, "_slice_" + str(idx))
+                    slice_layer._in_names.extend(list(layer.bottom))
+                    slice_layer._out_names.append(list(layer.top)[idx])
+                    start_end = slice_point[idx : idx + 2]
+
+                    params_slice = [
+                        np.array([start_end[0]]),
+                        np.array([start_end[1]]),
+                        np.array([axes]),
+                    ]
+
+                    slice_layer.generate_params(params_slice)
+                    slice_layer.generate_node()
+
+                    self._node_post_process(slice_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
