@@ -13,7 +13,7 @@ class ClipLayer(BaseLayer):
     def create_clip_param(self, params, name):
         param_name = self._layer.name + name
 
-        param_type = tp.INT64
+        param_type = tp.FLOAT
         param_shape = params.shape
 
         param_tensor_value_info = helper.make_tensor_value_info(

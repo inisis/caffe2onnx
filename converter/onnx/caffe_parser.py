@@ -614,7 +614,7 @@ class caffe2onnx_converter:
                 clip_layer = ops.ClipLayer(layer, "_clip")
                 clip_layer._in_names.append(relu_layer_out_name)
                 clip_layer._out_names.extend(list(layer.top))
-                params_clip = [np.array([]), np.array(layer.relu6_param.threshold)]
+                params_clip = [np.array(np.NINF), np.array(layer.relu6_param.threshold)]
                 clip_layer.generate_params(params_clip)
                 clip_layer.generate_node()
 
