@@ -224,7 +224,7 @@ class caffe2onnx_converter:
                         eltwise_layer._in_names.append(last_layer_output_name)
                     else:
                         eltwise_layer._in_names.append(layer.bottom[idx])
-                if list(layer.eltwise_param.coeff)[0] == -1:
+                if len(list(layer.eltwise_param.coeff)) != 0 and list(layer.eltwise_param.coeff)[0] == -1:
                     eltwise_out_name = layer.name + "_eltwist_out"
                     eltwise_layer._out_names.append(eltwise_out_name)
                     eltwise_layer.generate_node()
