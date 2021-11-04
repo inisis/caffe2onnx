@@ -30,3 +30,4 @@ from layers.prelu_layer import PReluLayer
 from layers.sine_layer import SineLayer
 from layers.slice_layer import SliceLayer
 from layers.clip_layer import ClipLayer
+from layers.elu_layer import EluLayer

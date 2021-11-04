@@ -619,6 +619,14 @@ class caffe2onnx_converter:
                 clip_layer.generate_node()
 
                 self._node_post_process(clip_layer)
+            elif layer.type == "ELU":
+                elu_layer = ops.EluLayer(layer)
+                elu_layer._in_names.extend(list(layer.bottom))
+                elu_layer._out_names.extend(list(layer.top))
+
+                elu_layer.generate_node()
+
+                self._node_post_process(elu_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
