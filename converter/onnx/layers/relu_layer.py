@@ -10,7 +10,10 @@ class ReluLayer(BaseLayer):
 
     def get_relu_attr(self):
         attr_dict = {"alpha": 0}
-        attr_dict["alpha"] = self._layer.relu_param.negative_slope
+        if self._layer.type=="ReLU6":
+            attr_dict["alpha"] = self._layer.relu6_param.negative_slope
+        else:
+            attr_dict["alpha"] = self._layer.relu_param.negative_slope
 
         return attr_dict
 

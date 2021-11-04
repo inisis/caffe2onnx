@@ -170,8 +170,8 @@ class caffe2onnx_converter:
                     relu_layer._out_names.extend(list(layer.top))
 
                 relu_layer.generate_node()
-                self._node_post_process(relu_layer)
 
+                self._node_post_process(relu_layer)
             elif layer.type == "Pooling":
                 if (
                     layer.pooling_param.pool == 1
@@ -601,6 +601,24 @@ class caffe2onnx_converter:
                     slice_layer.generate_node()
 
                     self._node_post_process(slice_layer)
+            elif layer.type == "ReLU6":
+                relu_layer = ops.ReluLayer(layer)
+                relu_layer_out_name = layer.name + "_relu_out"
+                relu_layer._in_names.extend(list(layer.bottom))
+                relu_layer._out_names.append(relu_layer_out_name)
+
+                relu_layer.generate_node()
+
+                self._node_post_process(relu_layer)
+
+                clip_layer = ops.ClipLayer(layer, "_clip")
+                clip_layer._in_names.append(relu_layer_out_name)
+                clip_layer._out_names.extend(list(layer.top))
+                params_clip = [np.array([]), np.array(layer.relu6_param.threshold)]
+                clip_layer.generate_params(params_clip)
+                clip_layer.generate_node()
+
+                self._node_post_process(clip_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
