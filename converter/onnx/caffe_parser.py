@@ -652,7 +652,7 @@ class caffe2onnx_converter:
         onnx_rt_dict = {}
         for input_name in self.caffe_net.inputs:
             shape = self.caffe_net.blobs[input_name].shape
-            input_data = np.ones(shape).astype(np.float32)
+            input_data =  np.random.randn(*shape).astype(np.float32)
             shape_str = " ".join(str(e) for e in shape)
             self.caffe_net.blobs[input_name].data[...] = input_data
             logging.info("caffe input: " + input_name + "shape: " + shape_str)
