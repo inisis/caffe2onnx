@@ -667,7 +667,7 @@ class caffe2onnx_converter:
         assert len(onnx_outname) == len(caffe_outname)
         for idx in range(len(onnx_outname)):
             np.testing.assert_allclose(
-                pred[caffe_outname[idx]], res[idx], rtol=1e-03, atol=1e-05
+                pred[caffe_outname[idx]], res[idx], rtol=1e-02, atol=1e-03
             )
 
     def _node_post_process(self, onnx_layer):
