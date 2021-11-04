@@ -344,6 +344,7 @@ class caffe2onnx_converter:
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
                 mul_layer.generate_params(params_log_numpy, shape)
                 mul_layer.generate_node()
+
                 self._node_post_process(mul_layer)
 
                 add_layer = ops.AddLayer(layer)
@@ -353,6 +354,7 @@ class caffe2onnx_converter:
 
                 add_layer.generate_params(params_log_numpy, shape)
                 add_layer.generate_node()
+
                 self._node_post_process(add_layer)
 
                 log_layer = ops.LogLayer(layer)
@@ -360,6 +362,7 @@ class caffe2onnx_converter:
                 log_layer._out_names.extend(list(layer.top))
 
                 log_layer.generate_node()
+
                 self._node_post_process(log_layer)
             elif layer.type == "Power":
                 # power layer = (mul + add) ^ power
@@ -378,6 +381,7 @@ class caffe2onnx_converter:
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
                 mul_layer.generate_params(params_power_numpy, shape)
                 mul_layer.generate_node()
+
                 self._node_post_process(mul_layer)
 
                 add_layer = ops.AddLayer(layer)
@@ -387,6 +391,7 @@ class caffe2onnx_converter:
 
                 add_layer.generate_params(params_power_numpy, shape)
                 add_layer.generate_node()
+
                 self._node_post_process(add_layer)
 
                 pow_layer = ops.PowerLayer(layer)
@@ -395,6 +400,7 @@ class caffe2onnx_converter:
                 params_power = np.array(layer.power_param.power)
                 pow_layer.generate_params(params_power)
                 pow_layer.generate_node()
+
                 self._node_post_process(pow_layer)
             elif layer.type == "BNLL":
                 bnll_layer = ops.BnllLayer(layer)
@@ -431,6 +437,7 @@ class caffe2onnx_converter:
                 relu_layer._in_names.extend(list(layer.bottom))
                 relu_layer._out_names.append(relu_output_name)
                 relu_layer.generate_node()
+
                 self._node_post_process(relu_layer)
 
                 neg_layer = ops.NegLayer(layer, "_neg")
@@ -438,6 +445,7 @@ class caffe2onnx_converter:
                 neg_layer._in_names.extend(list(layer.bottom))
                 neg_layer._out_names.append(neg_output_name)
                 neg_layer.generate_node()
+
                 self._node_post_process(neg_layer)
 
                 relu_neg_layer = ops.ReluLayer(layer, "_relu_neg")
@@ -445,6 +453,7 @@ class caffe2onnx_converter:
                 relu_neg_layer._in_names.append(neg_output_name)
                 relu_neg_layer._out_names.append(relu_neg_output_name)
                 relu_neg_layer.generate_node()
+
                 self._node_post_process(relu_neg_layer)
 
                 concat_layer = ops.ConcatLayer(layer)
@@ -452,6 +461,7 @@ class caffe2onnx_converter:
                 concat_layer._in_names.extend([relu_output_name, relu_neg_output_name])
                 concat_layer._out_names.extend(list(layer.top))
                 concat_layer.generate_node(layer.crelu_param.axis)
+
                 self._node_post_process(concat_layer)
             elif layer.type == "AbsVal":
                 abs_layer = ops.AbsLayer(layer)
@@ -477,6 +487,7 @@ class caffe2onnx_converter:
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
                 mul_layer.generate_params(params_exp_numpy, shape)
                 mul_layer.generate_node()
+
                 self._node_post_process(mul_layer)
 
                 add_layer = ops.AddLayer(layer)
@@ -487,6 +498,7 @@ class caffe2onnx_converter:
 
                 add_layer.generate_params(params_exp_numpy, shape)
                 add_layer.generate_node()
+
                 self._node_post_process(add_layer)
 
                 if layer.exp_param.base == -1:
@@ -495,6 +507,7 @@ class caffe2onnx_converter:
                     exp_layer._out_names.extend(list(layer.top))
 
                     exp_layer.generate_node()
+
                     self._node_post_process(exp_layer)
                 else:
                     power_layer = ops.PowerLayer(layer)
@@ -505,12 +518,14 @@ class caffe2onnx_converter:
                     power_layer._out_names.extend(list(layer.top))
 
                     power_layer.generate_node()
+
                     self._node_post_process(power_layer)
             elif layer.type == "TanH":
                 tanh_layer = ops.TanhLayer(layer)
                 tanh_layer._in_names.extend(list(layer.bottom))
                 tanh_layer._out_names.extend(list(layer.top))
                 tanh_layer.generate_node()
+
                 self._node_post_process(tanh_layer)
             elif layer.type == "Tile":
                 tile_layer = ops.TileLayer(layer)
@@ -520,6 +535,7 @@ class caffe2onnx_converter:
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
 
                 tile_layer.generate_node(shape)
+
                 self._node_post_process(tile_layer)
             elif layer.type == "PReLU":
                 prelu_layer = ops.PReluLayer(layer)
@@ -531,7 +547,15 @@ class caffe2onnx_converter:
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
                 
                 prelu_layer.generate_node(params_prelu_numpy[0], shape)
+
                 self._node_post_process(prelu_layer)
+            elif layer.type == "Sin":
+                sine_layer = ops.SineLayer(layer)
+                sine_layer._in_names.extend(list(layer.bottom))
+                sine_layer._out_names.extend(list(layer.top))
+                sine_layer.generate_node()
+
+                self._node_post_process(sine_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
