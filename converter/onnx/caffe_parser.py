@@ -224,11 +224,25 @@ class caffe2onnx_converter:
                         eltwise_layer._in_names.append(last_layer_output_name)
                     else:
                         eltwise_layer._in_names.append(layer.bottom[idx])
-                eltwise_layer._out_names.extend(list(layer.top))
+                if list(layer.eltwise_param.coeff)[0] == -1:
+                    eltwise_out_name = layer.name + "_eltwist_out"
+                    eltwise_layer._out_names.append(eltwise_out_name)
+                    eltwise_layer.generate_node()
 
-                eltwise_layer.generate_node()
+                    self._node_post_process(eltwise_layer)
 
-                self._node_post_process(eltwise_layer)
+                    neg_layer = ops.NegLayer(layer, "_neg")
+                    neg_output_name = layer.name + "_neg_out"
+                    neg_layer._in_names.append(eltwise_out_name)
+                    neg_layer._out_names.extend(list(layer.top))
+                    neg_layer.generate_node()
+
+                    self._node_post_process(neg_layer)
+                else:
+                    eltwise_layer._out_names.extend(list(layer.top))
+                    eltwise_layer.generate_node()
+
+                    self._node_post_process(eltwise_layer)
             elif layer.type == "InnerProduct":
                 reshape_layer = ops.Reshapelayer(layer)
 

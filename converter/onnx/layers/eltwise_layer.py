@@ -16,9 +16,23 @@ class EltwiseLayer(BaseLayer):
                 "Mul", self._in_names, self._out_names, self._layer.name
             )
         elif self._layer.eltwise_param.operation == 1:
-            node = helper.make_node(
-                "Add", self._in_names, self._out_names, self._layer.name
-            )
+            coeff = self._layer.eltwise_param.coeff
+            if coeff[0] == 1 and coeff[1] == 1:
+                node = helper.make_node(
+                    "Add", self._in_names, self._out_names, self._layer.name
+                )
+            if coeff[0] == 1 and coeff[1] == -1:
+                node = helper.make_node(
+                    "Sub", self._in_names, self._out_names, self._layer.name
+                )
+            if coeff[0] == -1 and coeff[1] == -1:
+                node = helper.make_node(
+                    "Add", self._in_names, self._out_names, self._layer.name
+                )
+            if coeff[0] == -1 and coeff[1] == 1:
+                node = helper.make_node(
+                    "Sub", self._in_names, self._out_names, self._layer.name
+                )
         elif self._layer.eltwise_param.operation == 2:
             node = helper.make_node(
                 "Max", self._in_names, self._out_names, self._layer.name
