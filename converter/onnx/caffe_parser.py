@@ -44,7 +44,7 @@ class caffe2onnx_converter:
         for layer in self.model_def.layer:
             if layer.type == "Input":
                 pass
-            elif layer.type == "Convolution":
+            elif layer.type == "Convolution" or layer.type == "DepthwiseConvolution":
                 conv_layer = ops.ConvLayer(layer)
                 for idx in range(len(layer.bottom)):
                     if layer.bottom[idx] in self.inplace_dict.keys():
