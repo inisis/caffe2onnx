@@ -224,7 +224,10 @@ class caffe2onnx_converter:
                         eltwise_layer._in_names.append(last_layer_output_name)
                     else:
                         eltwise_layer._in_names.append(layer.bottom[idx])
-                if len(list(layer.eltwise_param.coeff)) != 0 and list(layer.eltwise_param.coeff)[0] == -1:
+                if (
+                    len(list(layer.eltwise_param.coeff)) != 0
+                    and list(layer.eltwise_param.coeff)[0] == -1
+                ):
                     eltwise_out_name = layer.name + "_eltwist_out"
                     eltwise_layer._out_names.append(eltwise_out_name)
                     eltwise_layer.generate_node()
@@ -641,6 +644,23 @@ class caffe2onnx_converter:
                 elu_layer.generate_node()
 
                 self._node_post_process(elu_layer)
+            elif layer.type == "Upsample":
+                logging.warning(
+                    "Upsample only supports nearest upsample with same scale"
+                )
+                scale = layer.upsample_param.scale
+                params_upsample = [
+                    np.array([]),
+                    np.array([1.0, 1.0, scale, scale], dtype=np.float32),
+                ]
+                upsample_layer = ops.UpsampleLayer(layer)
+                upsample_layer._in_names.extend(list(layer.bottom))
+                upsample_layer._out_names.extend(list(layer.top))
+
+                upsample_layer.generate_params(params_upsample)
+                upsample_layer.generate_node()
+
+                self._node_post_process(upsample_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
