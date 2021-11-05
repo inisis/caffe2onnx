@@ -677,6 +677,24 @@ class caffe2onnx_converter:
                 upsamplebn_layer.generate_node(shape)
 
                 self._node_post_process(upsamplebn_layer)
+            elif layer.type == "Flatten":
+                shape = list(self.caffe_net.blobs[layer.bottom[0]].data.shape)
+                start_axis = layer.flatten_param.axis
+                end_axis = layer.flatten_param.end_axis
+
+                if start_axis < 0:
+                    start_axis = len(shape) + start_axis
+                if end_axis < 0:
+                    end_axis = len(shape) + end_axis
+
+                flatten_layer = ops.FlattenLayer(layer)
+                flatten_layer._in_names.extend(list(layer.bottom))
+                flatten_layer._out_names.extend(list(layer.top))
+                shape_new = shape[:start_axis] + [-1] + shape[end_axis + 1 :]
+
+                flatten_layer.generate_node(shape_new)
+
+                self._node_post_process(flatten_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 

@@ -33,3 +33,4 @@ from layers.clip_layer import ClipLayer
 from layers.elu_layer import EluLayer
 from layers.upsample_layer import UpsampleLayer
 from layers.upsamplebn_layer import UpsampleBNLayer
+from layers.flatten_layer import FlattenLayer
