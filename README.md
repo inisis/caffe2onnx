@@ -2,7 +2,9 @@
 
 ## Supported layers
 > * Convolution
+> * DepthwiseConvolution
 > * BatchNorm
+> * Scale
 > * ReLU
 > * Pooling
 > * Eltwise
@@ -19,6 +21,18 @@
 > * Bnll
 > * Selu
 > * Sqrt
+> * Cos
 > * CRelu
 > * Abs
 > * Exp
+> * TanH
+> * Tile
+> * PReLU
+> * Sin
+> * Slice
+> * ReLU6
+> * ELU
+> * Upsample
+> * UpsampleBN
+> * Flatten
+> * Reduction
