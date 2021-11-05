@@ -661,6 +661,22 @@ class caffe2onnx_converter:
                 upsample_layer.generate_node()
 
                 self._node_post_process(upsample_layer)
+            elif layer.type == "UpsampleBN":
+                stride = layer.upsample_param.scale
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                w = np.zeros((stride, stride))
+                w[0, 0] = 1
+                w = np.expand_dims(w, axis=(0, 1))
+                w = np.repeat(w, shape[1], axis=0)
+                params_upsample = [w]
+                upsamplebn_layer = ops.UpsampleBNLayer(layer)
+                upsamplebn_layer._in_names.extend(list(layer.bottom))
+                upsamplebn_layer._out_names.extend(list(layer.top))
+
+                upsamplebn_layer.generate_params(params_upsample)
+                upsamplebn_layer.generate_node(shape)
+
+                self._node_post_process(upsamplebn_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
@@ -717,7 +733,7 @@ class caffe2onnx_converter:
             self.caffe_net.blobs[input_name].data[...] = input_data
             logging.info("caffe input: " + input_name + "shape: " + shape_str)
             onnx_rt_dict[input_name] = input_data
-
+        # print(input_data)
         pred = self.caffe_net.forward()
         sess = rt.InferenceSession(self.model_def.SerializeToString())
         onnx_outname = [output.name for output in sess.get_outputs()]
