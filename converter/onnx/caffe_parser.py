@@ -357,7 +357,7 @@ class caffe2onnx_converter:
             elif layer.type == "Log":
                 # log layer = log (mul + add)
                 assert layer.log_param.base == -1  # log base e
-                mul_layer = ops.MulLayer(layer)
+                mul_layer = ops.MulLayer(layer, "_mul")
                 mul_out_name = layer.name + "_mul_out"
 
                 mul_layer._in_names.extend(list(layer.bottom))
@@ -375,7 +375,7 @@ class caffe2onnx_converter:
 
                 self._node_post_process(mul_layer)
 
-                add_layer = ops.AddLayer(layer)
+                add_layer = ops.AddLayer(layer, "_add")
                 add_out_name = layer.name + "_add_out"
                 add_layer._in_names.append(mul_out_name)
                 add_layer._out_names.append(add_out_name)
@@ -385,7 +385,7 @@ class caffe2onnx_converter:
 
                 self._node_post_process(add_layer)
 
-                log_layer = ops.LogLayer(layer)
+                log_layer = ops.LogLayer(layer, "_log")
                 log_layer._in_names.append(add_out_name)
                 log_layer._out_names.extend(list(layer.top))
 
@@ -394,7 +394,7 @@ class caffe2onnx_converter:
                 self._node_post_process(log_layer)
             elif layer.type == "Power":
                 # power layer = (mul + add) ^ power
-                mul_layer = ops.MulLayer(layer)
+                mul_layer = ops.MulLayer(layer, "_mul")
                 mul_out_name = layer.name + "_mul_out"
 
                 mul_layer._in_names.extend(list(layer.bottom))
@@ -412,7 +412,7 @@ class caffe2onnx_converter:
 
                 self._node_post_process(mul_layer)
 
-                add_layer = ops.AddLayer(layer)
+                add_layer = ops.AddLayer(layer, "_add")
                 add_out_name = layer.name + "_add_out"
                 add_layer._in_names.append(mul_out_name)
                 add_layer._out_names.append(add_out_name)
@@ -422,7 +422,7 @@ class caffe2onnx_converter:
 
                 self._node_post_process(add_layer)
 
-                pow_layer = ops.PowerLayer(layer)
+                pow_layer = ops.PowerLayer(layer, "_power")
                 pow_layer._in_names.append(add_out_name)
                 pow_layer._out_names.extend(list(layer.top))
                 params_power = np.array(layer.power_param.power)
@@ -500,7 +500,7 @@ class caffe2onnx_converter:
                 self._node_post_process(abs_layer)
             elif layer.type == "Exp":
                 # log layer = log (mul + add)
-                mul_layer = ops.MulLayer(layer)
+                mul_layer = ops.MulLayer(layer, "_mul")
                 mul_out_name = layer.name + "_mul_out"
 
                 mul_layer._in_names.extend(list(layer.bottom))
@@ -518,7 +518,7 @@ class caffe2onnx_converter:
 
                 self._node_post_process(mul_layer)
 
-                add_layer = ops.AddLayer(layer)
+                add_layer = ops.AddLayer(layer, "_add")
                 add_layer._in_names.append(mul_out_name)
 
                 add_out_name = layer.name + "_add_out"
@@ -530,7 +530,7 @@ class caffe2onnx_converter:
                 self._node_post_process(add_layer)
 
                 if layer.exp_param.base == -1:
-                    exp_layer = ops.ExpLayer(layer)
+                    exp_layer = ops.ExpLayer(layer, "_exp")
                     exp_layer._in_names.append(add_out_name)
                     exp_layer._out_names.extend(list(layer.top))
 
@@ -538,7 +538,7 @@ class caffe2onnx_converter:
 
                     self._node_post_process(exp_layer)
                 else:
-                    power_layer = ops.PowerLayer(layer)
+                    power_layer = ops.PowerLayer(layer, "_power")
                     params_power = np.array(layer.exp_param.base)
 
                     power_layer.generate_params(params_power)
