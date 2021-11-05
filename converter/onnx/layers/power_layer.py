@@ -8,8 +8,8 @@ from layers.base_layer import BaseLayer
 
 
 class PowerLayer(BaseLayer):
-    def __init__(self, layer):
-        super(PowerLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(PowerLayer, self).__init__(layer, name)
 
     def create_power_weight(self, params: np.ndarray):
         param_name = self._layer.name + "_weight"

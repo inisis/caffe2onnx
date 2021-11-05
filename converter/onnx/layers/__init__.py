@@ -34,3 +34,4 @@ from layers.elu_layer import EluLayer
 from layers.upsample_layer import UpsampleLayer
 from layers.upsamplebn_layer import UpsampleBNLayer
 from layers.flatten_layer import FlattenLayer
+from layers.reduction_layer import ReductionLayer

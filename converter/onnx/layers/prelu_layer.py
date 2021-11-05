@@ -8,8 +8,8 @@ from layers.base_layer import BaseLayer
 
 
 class PReluLayer(BaseLayer):
-    def __init__(self, layer):
-        super(PReluLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(PReluLayer, self).__init__(layer, name)
 
     def create_prelu_params(self, params, shape):
         param_name = self._layer.name + "_prelu"

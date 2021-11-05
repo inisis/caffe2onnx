@@ -8,8 +8,8 @@ from layers.base_layer import BaseLayer
 
 
 class PoolingLayer(BaseLayer):
-    def __init__(self, layer):
-        super(PoolingLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(PoolingLayer, self).__init__(layer, name)
 
     def get_pooling_attr(self, input_shape, mode=None):
         attr_dict = {

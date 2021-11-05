@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class EltwiseLayer(BaseLayer):
-    def __init__(self, layer):
-        super(EltwiseLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(EltwiseLayer, self).__init__(layer, name)
 
     def generate_node(self):
         if self._layer.eltwise_param.operation == 0:

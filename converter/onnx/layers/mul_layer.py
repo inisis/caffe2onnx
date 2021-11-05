@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class MulLayer(BaseLayer):
-    def __init__(self, layer):
-        super(MulLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(MulLayer, self).__init__(layer, name)
 
     def create_scale_weight(self, params: np.ndarray, shape):
         param_name = self._layer.name + "_weight"
@@ -73,19 +73,8 @@ class MulLayer(BaseLayer):
         logging.info("mul_layer: " + self._layer.name + " created")
         self._node = node
 
-    def generate_params(self, params, shape):
-        # refactor
+    def generate_params(self, params, shape=None):
         if self._layer.type == "Scale":
-            self._layer.name = self._layer.name + "_mul"
             self.create_scale_weight(params[0], shape)
-        elif self._layer.type == "Log":
-            self._layer.name = self._layer.name + "_mul"
-            self.create_log_weight(params[0])
-        elif self._layer.type == "Power":
-            self._layer.name = self._layer.name + "_mul"
-            self.create_log_weight(params[0])
-        elif self._layer.type == "Exp":
-            self._layer.name = self._layer.name + "_mul"
-            self.create_log_weight(params[0])
         else:
-            raise Exception("unsupported layer type : {}".format(self._layer.type))
+            self.create_log_weight(params[0])

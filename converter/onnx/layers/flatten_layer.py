@@ -8,8 +8,8 @@ from layers.base_layer import BaseLayer
 
 
 class FlattenLayer(BaseLayer):
-    def __init__(self, layer):
-        super(FlattenLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(FlattenLayer, self).__init__(layer, name)
 
     def create_flatten_params(self, shape):
         param_name = self._layer.name + "_flatten"

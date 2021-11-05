@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class AddLayer(BaseLayer):
-    def __init__(self, layer):
-        super(AddLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(AddLayer, self).__init__(layer, name)
 
     def create_scale_bias(self, params: np.ndarray, shape):
         param_name = self._layer.name + "_weight"
@@ -76,20 +76,8 @@ class AddLayer(BaseLayer):
 
     def generate_params(self, params, shape):
         if self._layer.type == "Scale":
-            self._layer.name = self._layer.name + "_add"
             if (len(params)) == 2:
                 self.create_scale_bias(params[1], shape)
-        elif self._layer.type == "Log":
-            self._layer.name = self._layer.name + "_add"
-            if (len(params)) == 2:
-                self.create_log_bias(params[1])
-        elif self._layer.type == "Power":
-            self._layer.name = self._layer.name + "_add"
-            if (len(params)) == 2:
-                self.create_log_bias(params[1])
-        elif self._layer.type == "Exp":
-            self._layer.name = self._layer.name + "_add"
-            if (len(params)) == 2:
-                self.create_log_bias(params[1])
         else:
-            raise Exception("unsupported layer type : {}".format(self._layer.type))
+            if (len(params)) == 2:
+                self.create_log_bias(params[1])

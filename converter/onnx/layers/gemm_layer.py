@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class GemmLayer(BaseLayer):
-    def __init__(self, layer):
-        super(GemmLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(GemmLayer, self).__init__(layer, name)
 
     def get_gemm_attr(self):
         attr_dict = {"alpha": 1.0, "beta": 1.0, "transA": 0, "transB": 1}

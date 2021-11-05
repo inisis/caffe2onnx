@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class ConcatLayer(BaseLayer):
-    def __init__(self, layer):
-        super(ConcatLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(ConcatLayer, self).__init__(layer, name)
 
     def get_concat_attr(self):
         attr_dict = {"axis": []}

@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class ConvLayer(BaseLayer):
-    def __init__(self, layer):
-        super(ConvLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(ConvLayer, self).__init__(layer, name)
 
     def get_conv_attr(self, input_shape):
         if len(input_shape) == 3:  # con1d

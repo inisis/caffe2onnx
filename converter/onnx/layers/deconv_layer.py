@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class DeconvLayer(BaseLayer):
-    def __init__(self, layer):
-        super(DeconvLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(DeconvLayer, self).__init__(layer, name)
 
     def get_conv_attr(self):
         attr_dict = {

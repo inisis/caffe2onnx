@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class BnllLayer(BaseLayer):
-    def __init__(self, layer):
-        super(BnllLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(BnllLayer, self).__init__(layer, name)
 
     def generate_node(self):
         node = helper.make_node(

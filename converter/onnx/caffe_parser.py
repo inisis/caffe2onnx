@@ -112,7 +112,7 @@ class caffe2onnx_converter:
                     continue
                 else:
                     # scale = Mul + Add
-                    mul_layer = ops.MulLayer(layer)
+                    mul_layer = ops.MulLayer(layer, "_mul")
 
                     params_scale = self.caffe_net.params[layer.name]
                     params_scale_numpy = self._param_to_numpy(params_scale)
@@ -128,7 +128,7 @@ class caffe2onnx_converter:
 
                         self._node_post_process(mul_layer)
 
-                        add_layer = ops.AddLayer(layer)
+                        add_layer = ops.AddLayer(layer, "_add")
 
                         add_layer._in_names.append(mul_out_name)
                         add_layer._out_names.extend(list(layer.top))
@@ -247,7 +247,7 @@ class caffe2onnx_converter:
 
                     self._node_post_process(eltwise_layer)
             elif layer.type == "InnerProduct":
-                reshape_layer = ops.Reshapelayer(layer)
+                reshape_layer = ops.Reshapelayer(layer, "_reshape")
 
                 shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
                 reshape_out_name = layer.name + "_reshape_out"
@@ -260,7 +260,7 @@ class caffe2onnx_converter:
 
                 self._node_post_process(reshape_layer)
 
-                gemm_layer = ops.GemmLayer(layer)
+                gemm_layer = ops.GemmLayer(layer, "_gemm")
                 gemm_layer._in_names.append(reshape_out_name)
                 gemm_layer._out_names.extend(list(layer.top))
                 params = self.caffe_net.params[layer.name]
@@ -695,6 +695,79 @@ class caffe2onnx_converter:
                 flatten_layer.generate_node(shape_new)
 
                 self._node_post_process(flatten_layer)
+            elif layer.type == "Reduction":
+                shape = list(self.caffe_net.blobs[layer.bottom[0]].data.shape)
+                if layer.reduction_param.operation == 2:
+                    abs_layer = ops.AbsLayer(layer, "_abs")
+                    abs_layer_out_name = layer.name + "_abs_out"
+                    abs_layer._in_names.extend(list(layer.bottom))
+                    abs_layer._out_names.append(abs_layer_out_name)
+
+                    abs_layer.generate_node()
+
+                    self._node_post_process(abs_layer)
+
+                    if layer.reduction_param.coeff != 1.0:
+                        reduction_layer = ops.ReductionLayer(layer, "_reduction")
+                        reduction_layer_out_name = layer.name + "_reduction_out"
+                        reduction_layer._in_names.append(abs_layer_out_name)
+                        reduction_layer._out_names.append(reduction_layer_out_name)
+
+                        reduction_layer.generate_node(shape)
+
+                        self._node_post_process(reduction_layer)
+                        mul_layer = ops.MulLayer(layer, "_mul")
+
+                        params_scale_numpy = np.array([layer.reduction_param.coeff])
+
+                        mul_out_name = layer.name + "_mul_out"
+
+                        mul_layer._in_names.append(reduction_layer_out_name)
+                        mul_layer._out_names.extend(list(layer.top))
+
+                        mul_layer.generate_params(params_scale_numpy)
+                        mul_layer.generate_node()
+
+                        self._node_post_process(mul_layer)
+                    else:
+                        reduction_layer = ops.ReductionLayer(layer, "_reduction")
+                        reduction_layer._in_names.append(abs_layer_out_name)
+                        reduction_layer._out_names.extend(list(layer.top))
+
+                        reduction_layer.generate_node(shape)
+
+                        self._node_post_process(reduction_layer)
+                else:
+                    if layer.reduction_param.coeff != 1.0:
+                        reduction_layer = ops.ReductionLayer(layer, "_reduction")
+                        reduction_layer_out_name = layer.name + "_reduction_out"
+                        reduction_layer._in_names.extend(list(layer.bottom))
+                        reduction_layer._out_names.append(reduction_layer_out_name)
+
+                        reduction_layer.generate_node(shape)
+
+                        self._node_post_process(reduction_layer)
+                        mul_layer = ops.MulLayer(layer, "_mul")
+
+                        params_scale_numpy = np.array([layer.reduction_param.coeff])
+
+                        mul_out_name = layer.name + "_mul_out"
+
+                        mul_layer._in_names.append(reduction_layer_out_name)
+                        mul_layer._out_names.extend(list(layer.top))
+
+                        mul_layer.generate_params(params_scale_numpy)
+                        mul_layer.generate_node()
+
+                        self._node_post_process(mul_layer)
+                    else:
+                        reduction_layer = ops.ReductionLayer(layer)
+                        reduction_layer._in_names.extend(list(layer.bottom))
+                        reduction_layer._out_names.extend(list(layer.top))
+
+                        reduction_layer.generate_node(shape)
+
+                        self._node_post_process(reduction_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
@@ -751,7 +824,7 @@ class caffe2onnx_converter:
             self.caffe_net.blobs[input_name].data[...] = input_data
             logging.info("caffe input: " + input_name + "shape: " + shape_str)
             onnx_rt_dict[input_name] = input_data
-        # print(input_data)
+
         pred = self.caffe_net.forward()
         sess = rt.InferenceSession(self.model_def.SerializeToString())
         onnx_outname = [output.name for output in sess.get_outputs()]

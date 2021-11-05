@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class LogLayer(BaseLayer):
-    def __init__(self, layer):
-        super(LogLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(LogLayer, self).__init__(layer, name)
 
     def generate_node(self):
         node = helper.make_node(

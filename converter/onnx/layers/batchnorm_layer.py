@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class BatchNormLayer(BaseLayer):
-    def __init__(self, layer):
-        super(BatchNormLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(BatchNormLayer, self).__init__(layer, name)
 
     def get_batchnorm_attr(self):
         attr_dict = {"epsilon": 1e-5, "momentum": 0.999}

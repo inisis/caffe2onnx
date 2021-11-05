@@ -7,8 +7,8 @@ from layers.base_layer import BaseLayer
 
 
 class SqrtLayer(BaseLayer):
-    def __init__(self, layer):
-        super(SqrtLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(SqrtLayer, self).__init__(layer, name)
 
     def generate_node(self):
         node = helper.make_node(

@@ -8,8 +8,8 @@ from layers.base_layer import BaseLayer
 
 
 class TileLayer(BaseLayer):
-    def __init__(self, layer):
-        super(TileLayer, self).__init__(layer)
+    def __init__(self, layer, name=None):
+        super(TileLayer, self).__init__(layer, name)
 
     def create_tile_params(self, shape):
         attr_dict = {"axis": []}
