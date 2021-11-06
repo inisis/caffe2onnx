@@ -177,9 +177,19 @@ class caffe2onnx_converter:
                     layer.pooling_param.pool == 1
                     and layer.pooling_param.global_pooling != True
                 ):
+                    for idx in range(len(layer.bottom)):
+                        if layer.bottom[idx] in self.inplace_dict.keys():
+                            last_key = list(
+                                self.inplace_dict[layer.bottom[idx]].keys()
+                            )[-1]
+                            last_layer_output_name = self.inplace_dict[
+                                layer.bottom[idx]
+                            ][last_key]["new_output"]
+                        else:
+                            last_layer_output_name = layer.bottom[idx]
                     pad_layer = ops.PadLayer(layer, "_pad")
                     pad_layer_out_name = layer.name + "_pad_out"
-                    pad_layer._in_names.extend(list(layer.bottom))
+                    pad_layer._in_names.append(last_layer_output_name)
                     pad_layer._out_names.append(pad_layer_out_name)
                     pad_layer.generate_node()
 

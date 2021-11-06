@@ -30,8 +30,8 @@ class PoolingLayer(BaseLayer):
         if self._layer.pooling_param.stride != 1:
             strides = [self._layer.pooling_param.stride] * 2
         elif (
-            self._layer.pooling_param.stride_h != 1
-            or self._layer.pooling_param.stride_w != 1
+            self._layer.pooling_param.stride_h != 0
+            or self._layer.pooling_param.stride_w != 0
         ):
             strides = [
                 self._layer.pooling_param.stride_h,
