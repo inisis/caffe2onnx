@@ -36,3 +36,10 @@
 > * UpsampleBN
 > * Flatten
 > * Reduction
+
+## Tested models
+> * Resnet-18
+> * Resnet-50
+> * Mobilenet-v1
+> * Mobilenet-v2
+> * Yolov5
