@@ -26,6 +26,9 @@ class PoolingLayer(BaseLayer):
         else:
             kernel_shape = [self._layer.pooling_param.kernel_size] * 2
 
+        if len(input_shape) == 3:
+            kernel_shape = [self._layer.pooling_param.kernel_h]
+
         attr_dict["kernel_shape"] = kernel_shape
         if self._layer.pooling_param.stride != 1:
             strides = [self._layer.pooling_param.stride] * 2
@@ -39,6 +42,9 @@ class PoolingLayer(BaseLayer):
             ]
         else:
             strides = [1, 1]
+
+        if len(input_shape) == 3:
+            strides = [self._layer.pooling_param.stride_h]
 
         attr_dict["strides"] = strides
         if self._layer.pooling_param.pad != 0:
@@ -58,14 +64,21 @@ class PoolingLayer(BaseLayer):
         ) * strides[0] > (input_shape[2] + pads[0]):
             attr_dict["ceil_mode"] = False
 
-        if math.ceil(
-            (input_shape[3] - kernel_shape[1] + pads[1] + pads[3]) / strides[1]
-        ) * strides[1] > (input_shape[3] + pads[1]):
-            attr_dict["ceil_mode"] = False
+        if len(input_shape) != 3:
+            if math.ceil(
+                (input_shape[3] - kernel_shape[1] + pads[1] + pads[3]) / strides[1]
+            ) * strides[1] > (input_shape[3] + pads[1]):
+                attr_dict["ceil_mode"] = False
+
+        if len(input_shape) == 3:
+            pads = [pads[0], pads[1]]
 
         attr_dict["pads"] = pads
         if mode == "AveragePool":
-            attr_dict["pads"] = [0, 0, 0, 0]
+            if len(input_shape) == 3:
+                attr_dict["pads"] = [0, 0]
+            else:
+                attr_dict["pads"] = [0, 0, 0, 0]
 
         return attr_dict
 

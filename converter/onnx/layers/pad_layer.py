@@ -11,7 +11,7 @@ class PadLayer(BaseLayer):
     def __init__(self, layer, name=None):
         super(PadLayer, self).__init__(layer, name)
 
-    def create_pad_params(self):
+    def create_pad_params(self, input_shape):
         pad = self._layer.pooling_param.pad
         if pad != 0:
             pad_h = pad_w = pad
@@ -24,7 +24,11 @@ class PadLayer(BaseLayer):
                 pad_w = self._layer.pooling_param.pad_w
             else:
                 pad_h = pad_w = 0
-        pads = [0, 0, pad_h, pad_w, 0, 0, pad_h, pad_w]
+
+        if len(input_shape) == 3:
+            pads = [0, 0, pad_h, 0, 0, pad_h]
+        else:
+            pads = [0, 0, pad_h, pad_w, 0, 0, pad_h, pad_w]
 
         params = np.array(pads)
 
@@ -42,12 +46,12 @@ class PadLayer(BaseLayer):
         self._in_tensor_value_info.append(param_tensor_value_info)
         self._init_tensor.append(param_tensor)
 
-    def generate_node(self):
+    def generate_node(self, input_shape):
         if (
             self._layer.pooling_param.pool == 1
             and self._layer.pooling_param.global_pooling != True
         ):
-            self.create_pad_params()
+            self.create_pad_params(input_shape)
 
         node = helper.make_node(
             "Pad", self._in_names, self._out_names, self._layer.name, mode="constant"

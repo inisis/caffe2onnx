@@ -187,18 +187,19 @@ class caffe2onnx_converter:
                             ][last_key]["new_output"]
                         else:
                             last_layer_output_name = layer.bottom[idx]
+                    shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+
                     pad_layer = ops.PadLayer(layer, "_pad")
                     pad_layer_out_name = layer.name + "_pad_out"
                     pad_layer._in_names.append(last_layer_output_name)
                     pad_layer._out_names.append(pad_layer_out_name)
-                    pad_layer.generate_node()
+                    pad_layer.generate_node(shape)
 
                     self._node_post_process(pad_layer)
 
                     pooling_layer = ops.PoolingLayer(layer)
                     pooling_layer._in_names.append(pad_layer_out_name)
                     pooling_layer._out_names.extend(list(layer.top))
-                    shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
 
                     pooling_layer.generate_node(shape)
                     self._node_post_process(pooling_layer)
