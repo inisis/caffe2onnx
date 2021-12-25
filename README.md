@@ -35,7 +35,9 @@
 > * Upsample
 > * UpsampleBN
 > * Flatten
-> * Reduction
+> * Squeeze
+> * Transpose
+> * Lstm
 
 ## Tested models
 > * Resnet-18

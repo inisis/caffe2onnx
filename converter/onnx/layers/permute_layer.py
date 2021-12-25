@@ -30,12 +30,6 @@ class PermuteLayer(BaseLayer):
 
         return attr_dict
 
-    def get_softmax_permute_attr(self, params=None):
-        attr_dict = {"perm": []}
-        attr_dict["perm"] = params
-
-        return attr_dict
-
     def generate_node(self, shape):
         attr_dict = self.get_permute_attr(shape)
         node = helper.make_node(
