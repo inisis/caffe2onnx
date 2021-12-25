@@ -38,3 +38,4 @@ from layers.reduction_layer import ReductionLayer
 from layers.lstminfer_layer import LSTMInferLayer
 from layers.squeeze_layer import SqueezeLayer
 from layers.transpose_layer import TransposeLayer
+from layers.gru_layer import GRULayer
