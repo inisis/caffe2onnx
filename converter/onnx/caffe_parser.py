@@ -779,6 +779,88 @@ class caffe2onnx_converter:
                         reduction_layer.generate_node(shape)
 
                         self._node_post_process(reduction_layer)
+            elif layer.type == "LSTMInfer":
+                pre_transpose_layer = ops.TransposeLayer(layer, "_pre_transpose")
+                pre_transpose_out_name = layer.name + "_pre_transpose_out"
+
+                pre_transpose_layer._in_names.extend(list(layer.bottom))
+                pre_transpose_layer._out_names.append(pre_transpose_out_name)
+                pre_transpose_layer.generate_node([1, 0, 2])
+                self._node_post_process(pre_transpose_layer)
+
+                lstminfer_layer = ops.LSTMInferLayer(layer)
+                lstminfer_layer_out_name = layer.name + "_lstminfer_out"
+                lstminfer_layer._in_names.append(pre_transpose_out_name)
+                lstminfer_layer._out_names.append(lstminfer_layer_out_name)
+                if layer.lstm_param.return_last == True:
+                    lstminfer_layer_last_out_name = layer.name + "_lstminfer_last_out"
+                    lstminfer_layer._out_names.append(lstminfer_layer_last_out_name)
+                params = self.caffe_net.params[layer.name]
+                params_numpy = self._param_to_numpy(params)
+
+                params_lstminfer_numpy = [
+                    np.concatenate(
+                        (
+                            params_numpy[0::2][1],  # i
+                            params_numpy[0::2][3],  # o
+                            params_numpy[0::2][0],  # f
+                            params_numpy[0::2][2],  # c
+                        ),
+                        axis=0,
+                    ),
+                    np.concatenate(
+                        (
+                            params_numpy[1::2][1],  # i
+                            params_numpy[1::2][3],  # o
+                            params_numpy[1::2][0],  # f
+                            params_numpy[1::2][2],  # c
+                        ),
+                        axis=0,
+                    ),
+                ]
+
+                if len(params_numpy) == 12:
+                    params_lstminfer_numpy += [
+                        np.concatenate(
+                            (
+                                params_numpy[9],  # i
+                                params_numpy[11],  # o
+                                params_numpy[8],  # f
+                                params_numpy[10],  # c
+                            ),
+                            axis=0,
+                        ),
+                    ]
+
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                lstminfer_layer.generate_params(params_lstminfer_numpy)
+                lstminfer_layer.generate_node(shape)
+
+                self._node_post_process(lstminfer_layer)
+
+                if layer.lstm_param.return_last == True:
+                    squeeze_layer = ops.SqueezeLayer(layer, "_squeeze")
+                    squeeze_layer._in_names.append(lstminfer_layer_last_out_name)
+                    squeeze_layer._out_names.extend(list(layer.top))
+                    squeeze_layer.generate_node([0])
+
+                    self._node_post_process(squeeze_layer)
+                else:
+                    squeeze_layer = ops.SqueezeLayer(layer, "_squeeze")
+                    squeeze_out_name = layer.name + "_squeeze_out"
+                    squeeze_layer._in_names.append(lstminfer_layer_out_name)
+                    squeeze_layer._out_names.append(squeeze_out_name)
+                    squeeze_layer.generate_node([1])
+
+                    self._node_post_process(squeeze_layer)
+
+                    post_transpose_layer = ops.TransposeLayer(layer, "_post_transpose")
+
+                    post_transpose_layer._in_names.append(squeeze_out_name)
+                    post_transpose_layer._out_names.extend(list(layer.top))
+                    post_transpose_layer.generate_node([1, 0, 2])
+
+                    self._node_post_process(post_transpose_layer)
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
@@ -845,8 +927,11 @@ class caffe2onnx_converter:
         assert len(onnx_outname) == len(caffe_outname)
         for idx in range(len(onnx_outname)):
             np.testing.assert_allclose(
-                pred[caffe_outname[idx]], res[idx], rtol=1e-02, atol=1e-03
+                pred[caffe_outname[idx]],
+                res[idx],
+                atol=1e-03,
             )
+        logging.info("accuracy test passed")
 
     def _node_post_process(self, onnx_layer):
         self.nodes.append(onnx_layer._node)
