@@ -32,6 +32,10 @@ class SqueezeLayer(BaseLayer):
     def generate_node(self, dim):
         if self._layer.type == "LSTMInfer":
             self.create_squeeze_params(dim)
+        elif self._layer.type == "GRU":
+            self.create_squeeze_params(dim)        
+        else:
+            raise Exception("squeeze op unsupported layer type: {}".format(self._layer.type))
 
         node = helper.make_node(
             "Squeeze", self._in_names, self._out_names, self._layer.name
