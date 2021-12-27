@@ -861,6 +861,85 @@ class caffe2onnx_converter:
                     post_transpose_layer.generate_node([1, 0, 2])
 
                     self._node_post_process(post_transpose_layer)
+            elif layer.type == "GRU":
+                pre_transpose_layer = ops.TransposeLayer(layer, "_pre_transpose")
+                pre_transpose_out_name = layer.name + "_pre_transpose_out"
+
+                pre_transpose_layer._in_names.extend(list(layer.bottom))
+                pre_transpose_layer._out_names.append(pre_transpose_out_name)
+                pre_transpose_layer.generate_node([1, 0, 2])
+                self._node_post_process(pre_transpose_layer)
+
+                gru_layer = ops.GRULayer(layer)
+                gru_layer_out_name = layer.name + "_gru_out"
+                gru_layer._in_names.append(pre_transpose_out_name)
+                gru_layer._out_names.append(gru_layer_out_name)
+                if layer.gru_param.return_last == True:
+                    gru_layer_last_out_name = layer.name + "_gru_last_out"
+                    gru_layer._out_names.append(gru_layer_last_out_name)
+                params = self.caffe_net.params[layer.name]
+                params_numpy = self._param_to_numpy(params)
+
+                params_gru_numpy = [
+                    np.concatenate(
+                        (
+                            params_numpy[0::2][1],  # z
+                            params_numpy[0::2][0],  # r
+                            params_numpy[0::2][2],  # h
+                        ),
+                        axis=0,
+                    ),
+                    np.concatenate(
+                        (
+                            params_numpy[1::2][1],  # z
+                            params_numpy[1::2][0],  # r
+                            params_numpy[1::2][2],  # h
+                        ),
+                        axis=0,
+                    ),
+                ]
+
+                if len(params_numpy) == 9:
+                    params_gru_numpy += [
+                        np.concatenate(
+                            (
+                                params_numpy[7],  # z
+                                params_numpy[6],  # r
+                                params_numpy[8],  # h
+                            ),
+                            axis=0,
+                        ),
+                    ]
+
+                shape = self.caffe_net.blobs[layer.bottom[0]].data.shape
+                gru_layer.generate_params(params_gru_numpy)
+                gru_layer.generate_node(shape)
+
+                self._node_post_process(gru_layer)
+
+                if layer.gru_param.return_last == True:
+                    squeeze_layer = ops.SqueezeLayer(layer, "_squeeze")
+                    squeeze_layer._in_names.append(gru_layer_last_out_name)
+                    squeeze_layer._out_names.extend(list(layer.top))
+                    squeeze_layer.generate_node([0])
+
+                    self._node_post_process(squeeze_layer)
+                else:
+                    squeeze_layer = ops.SqueezeLayer(layer, "_squeeze")
+                    squeeze_out_name = layer.name + "_squeeze_out"
+                    squeeze_layer._in_names.append(gru_layer_out_name)
+                    squeeze_layer._out_names.append(squeeze_out_name)
+                    squeeze_layer.generate_node([1])
+
+                    self._node_post_process(squeeze_layer)
+
+                    post_transpose_layer = ops.TransposeLayer(layer, "_post_transpose")
+
+                    post_transpose_layer._in_names.append(squeeze_out_name)
+                    post_transpose_layer._out_names.extend(list(layer.top))
+                    post_transpose_layer.generate_node([1, 0, 2])
+
+                    self._node_post_process(post_transpose_layer)                    
             else:
                 raise Exception("unsupported layer type: {}".format(layer.type))
 
