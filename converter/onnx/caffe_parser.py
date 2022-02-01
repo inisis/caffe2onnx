@@ -175,7 +175,7 @@ class caffe2onnx_converter:
             elif layer.type == "Pooling":
                 if (
                     layer.pooling_param.pool == 1
-                    and layer.pooling_param.global_pooling != True
+                    and layer.pooling_param.global_pooling != True # average pooling and not global pooling
                 ):
                     for idx in range(len(layer.bottom)):
                         if layer.bottom[idx] in self.inplace_dict.keys():
