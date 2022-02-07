@@ -38,6 +38,7 @@
 > * Squeeze
 > * Transpose
 > * Lstm
+> * Gru
 
 ## Tested models
 > * Resnet-18
