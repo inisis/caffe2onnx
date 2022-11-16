@@ -10,11 +10,11 @@ from google.protobuf import text_format
 
 import numpy as np
 
-from onnx import save, helper, checker
-
+from onnx import save, helper, checker, defs
 import onnxruntime as rt
 
 import layers as ops
+from typing import Optional
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-5s %(message)s",
@@ -24,11 +24,12 @@ logging.basicConfig(
 
 
 class caffe2onnx_converter:
-    def __init__(self, proto_file, weight_file, onnx_file_name):
+    def __init__(self, proto_file, weight_file, onnx_file_name, opset_version: Optional[int] = None):
         self.proto_file = proto_file
         self.weight_file = weight_file
         self.onnx_file_name = onnx_file_name
         self.save_path = os.path.dirname(os.path.abspath(self.proto_file))
+        self.opset_version = opset_version
 
     def run(self):
         self.model_def = self._load_caffe_prototxt()
@@ -972,7 +973,15 @@ class caffe2onnx_converter:
             self.init_tensor,
         )
 
-        self.model_def = helper.make_model(graph_def, producer_name="caffe")
+        opset_imports = None
+        if self.opset_version is not None:
+            opset_imports = [
+                helper.make_operatorsetid(
+                    domain=defs.ONNX_DOMAIN,
+                    version=self.opset_version,
+                ),
+            ]
+        self.model_def = helper.make_model(graph_def, producer_name="caffe", opset_imports=opset_imports)
         self._freeze()
         checker.check_model(self.model_def)
         logging.info("onnx model conversion completed")
